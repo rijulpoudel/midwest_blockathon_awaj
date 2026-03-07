@@ -7,7 +7,7 @@ export default function useWallet() {
 
   const connectWallet = useCallback(async () => {
     if (!window.ethereum) {
-      setError("MetaMask not installed. Please install MetaMask to continue.");
+      setError("MetaMask not installed. Please install MetaMask to use Echo.");
       return;
     }
     setIsConnecting(true);
@@ -19,16 +19,15 @@ export default function useWallet() {
       setAccount(accounts[0]);
     } catch (err) {
       if (err.code === 4001) {
-        setError("Connection rejected. Please try again.");
+        setError("Wallet connection rejected. Please try again.");
       } else {
-        setError(err.message);
+        setError("Failed to connect wallet. Please try again.");
       }
     } finally {
       setIsConnecting(false);
     }
   }, []);
 
-  // On mount: silent check if already connected (no popup)
   useEffect(() => {
     if (!window.ethereum) return;
 
@@ -36,7 +35,6 @@ export default function useWallet() {
       if (accounts.length > 0) setAccount(accounts[0]);
     });
 
-    // Listen for account changes
     const handleAccountsChanged = (accounts) => {
       if (accounts.length === 0) {
         setAccount("");
@@ -46,7 +44,6 @@ export default function useWallet() {
     };
 
     window.ethereum.on("accountsChanged", handleAccountsChanged);
-
     return () => {
       window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
     };

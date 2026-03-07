@@ -2,65 +2,60 @@
 pragma solidity ^0.8.20;
 
 /// @title EchoRegistry — Citizen Evidence Reporting for Nepal
-/// @notice This contract lets citizens submit civic reports on-chain and lets
-///         government bodies update report statuses. All data is permanent and
-///         publicly auditable on the Polygon blockchain.
+/// @notice Citizens submit civic reports on-chain; government bodies update
+///         statuses and escalate through Ward → Municipality → District →
+///         Province → Federal. Reporters confirm or dispute resolutions.
 contract EchoRegistry {
+
     // -------------------------------------------------------
     //  Data structures
     // -------------------------------------------------------
 
-    /// @notice Represents a single citizen report stored on-chain.
     struct Report {
-        uint256 id;            // Unique report ID (1-indexed)
-        address reporter;      // Wallet address of the citizen who submitted
-        string ipfsHash;       // Pinata IPFS CID pointing to report metadata/photo
-        string location;       // Human-readable location, e.g. "Lalitpur Ward 5"
-        string category;       // Issue category, e.g. "Road Damage"
-        uint8 status;          // 0 = Submitted, 1 = InReview, 2 = Escalated, 3 = Resolved
-        uint256 timestamp;     // Block timestamp when the report was created
-        address assignedBody;  // Government wallet that last updated the status
+        uint256 id;
+        address reporter;
+        string ipfsHash;
+        string location;
+        string category;
+        uint8 status;            // 0=Submitted 1=InReview 2=Escalated 3=PendingConfirmation 4=Resolved 5=Disputed
+        uint256 timestamp;
+        address assignedBody;
+        uint8 escalationLevel;   // 0=Ward 1=Municipality 2=District 3=Province 4=Federal
+        bool reporterConfirmed;
+        uint256 lastUpdated;
     }
 
     // -------------------------------------------------------
     //  State variables
     // -------------------------------------------------------
 
-    /// @notice Total number of reports ever submitted. Also used as the next ID.
     uint256 public reportCount;
-
-    /// @notice Maps a report ID to its full Report struct.
     mapping(uint256 => Report) public reports;
 
     // -------------------------------------------------------
     //  Events
     // -------------------------------------------------------
 
-    /// @notice Emitted when a citizen submits a new report.
-    event ReportSubmitted(
-        uint256 indexed id,
-        address indexed reporter,
-        string ipfsHash
-    );
+    event ReportSubmitted(uint256 indexed id, address indexed reporter, string ipfsHash);
+    event StatusUpdated(uint256 indexed id, uint8 newStatus, address indexed updatedBy);
+    event ReportEscalated(uint256 indexed id, uint8 newLevel, address escalatedBy);
+    event ResolutionPending(uint256 indexed id, address markedBy);
+    event ResolutionConfirmed(uint256 indexed id, address confirmedBy);
+    event ResolutionDisputed(uint256 indexed id, address disputedBy);
 
-    /// @notice Emitted when a government body updates a report's status.
-    event StatusUpdated(
-        uint256 indexed id,
-        uint8 newStatus,
-        address indexed updatedBy
-    );
+    // -------------------------------------------------------
+    //  Modifiers
+    // -------------------------------------------------------
+
+    modifier reportExists(uint256 _reportId) {
+        require(_reportId > 0 && _reportId <= reportCount, "Report does not exist");
+        _;
+    }
 
     // -------------------------------------------------------
     //  Functions
     // -------------------------------------------------------
 
-    /// @notice Submit a new civic report to the blockchain.
-    /// @dev Increments reportCount, creates a Report struct, stores it, and
-    ///      emits a ReportSubmitted event. Anyone with a wallet can call this.
-    /// @param _ipfsHash  The IPFS CID (from Pinata) of the uploaded evidence.
-    /// @param _location  A human-readable location string.
-    /// @param _category  The issue category (e.g. "Water Supply").
-    /// @return The ID of the newly created report.
     function submitReport(
         string calldata _ipfsHash,
         string calldata _location,
@@ -74,43 +69,82 @@ contract EchoRegistry {
             ipfsHash: _ipfsHash,
             location: _location,
             category: _category,
-            status: 0,               // Submitted
+            status: 0,
             timestamp: block.timestamp,
-            assignedBody: address(0)  // No one assigned yet
+            assignedBody: address(0),
+            escalationLevel: 0,
+            reporterConfirmed: false,
+            lastUpdated: block.timestamp
         });
 
         emit ReportSubmitted(reportCount, msg.sender, _ipfsHash);
-
         return reportCount;
     }
 
-    /// @notice Update the status of an existing report.
-    /// @dev Sets the new status and records which wallet made the update.
-    ///      Intended to be called by a government body, but there is no
-    ///      access-control gate — kept simple for the hackathon.
-    /// @param _reportId  The ID of the report to update.
-    /// @param _newStatus The new status code (0-3).
-    function updateStatus(uint256 _reportId, uint8 _newStatus) external {
-        require(_reportId > 0 && _reportId <= reportCount, "Report does not exist");
-
+    function updateStatus(uint256 _reportId, uint8 _newStatus) external reportExists(_reportId) {
         reports[_reportId].status = _newStatus;
         reports[_reportId].assignedBody = msg.sender;
+        reports[_reportId].lastUpdated = block.timestamp;
 
         emit StatusUpdated(_reportId, _newStatus, msg.sender);
     }
 
-    /// @notice Retrieve the full details of a report by its ID.
-    /// @dev This is a view function — it reads from the blockchain for free.
-    /// @param _reportId The ID of the report to look up.
-    /// @return The complete Report struct.
-    function getReport(uint256 _reportId) external view returns (Report memory) {
-        require(_reportId > 0 && _reportId <= reportCount, "Report does not exist");
+    function escalateReport(uint256 _reportId) external reportExists(_reportId) {
+        require(reports[_reportId].escalationLevel < 4, "Already at highest escalation level");
+
+        reports[_reportId].escalationLevel++;
+        reports[_reportId].status = 2; // Escalated
+        reports[_reportId].assignedBody = msg.sender;
+        reports[_reportId].lastUpdated = block.timestamp;
+
+        emit ReportEscalated(_reportId, reports[_reportId].escalationLevel, msg.sender);
+    }
+
+    function markPendingConfirmation(uint256 _reportId) external reportExists(_reportId) {
+        reports[_reportId].status = 3; // PendingConfirmation
+        reports[_reportId].assignedBody = msg.sender;
+        reports[_reportId].lastUpdated = block.timestamp;
+
+        emit ResolutionPending(_reportId, msg.sender);
+    }
+
+    function confirmResolution(uint256 _reportId) external reportExists(_reportId) {
+        require(msg.sender == reports[_reportId].reporter, "Only the original reporter can confirm resolution");
+
+        reports[_reportId].status = 4; // Resolved
+        reports[_reportId].reporterConfirmed = true;
+        reports[_reportId].lastUpdated = block.timestamp;
+
+        emit ResolutionConfirmed(_reportId, msg.sender);
+    }
+
+    function disputeResolution(uint256 _reportId) external reportExists(_reportId) {
+        require(msg.sender == reports[_reportId].reporter, "Only the original reporter can dispute resolution");
+        require(reports[_reportId].status == 3, "Report is not pending confirmation");
+
+        reports[_reportId].status = 5; // Disputed
+        reports[_reportId].lastUpdated = block.timestamp;
+
+        emit ResolutionDisputed(_reportId, msg.sender);
+    }
+
+    function getReport(uint256 _reportId) external view reportExists(_reportId) returns (Report memory) {
         return reports[_reportId];
     }
 
-    /// @notice Returns the total number of reports submitted so far.
-    /// @return The current reportCount.
     function getReportCount() public view returns (uint256) {
         return reportCount;
+    }
+
+    function getRecentReportIds(uint256 count) external view returns (uint256[] memory) {
+        uint256 total = reportCount;
+        if (count > total) count = total;
+        if (count > 20) count = 20;
+
+        uint256[] memory ids = new uint256[](count);
+        for (uint256 i = 0; i < count; i++) {
+            ids[i] = total - i;
+        }
+        return ids;
     }
 }

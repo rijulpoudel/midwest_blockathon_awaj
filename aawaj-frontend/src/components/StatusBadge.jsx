@@ -1,20 +1,21 @@
-import { STATUS_LABELS } from "../constants";
-
-const STATUS_COLORS = [
-  "bg-yellow-100 text-yellow-800", // Submitted
-  "bg-blue-100 text-blue-800", // In Review
-  "bg-orange-100 text-orange-800", // Escalated
-  "bg-green-100 text-green-800", // Resolved
-];
+import { STATUS_CONFIG } from "../constants";
 
 export default function StatusBadge({ status }) {
+  const config = STATUS_CONFIG[status] || {
+    label: "Unknown",
+    color: "bg-gray-100 text-gray-800",
+    dot: "bg-gray-400",
+  };
+  const showPulse = status === 0 || status === 3;
+
   return (
     <span
-      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-        STATUS_COLORS[status] || "bg-gray-100 text-gray-800"
-      }`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${config.color}`}
     >
-      {STATUS_LABELS[status] || "Unknown"}
+      {showPulse && (
+        <span className={`w-2 h-2 rounded-full ${config.dot} animate-pulse`} />
+      )}
+      {config.label}
     </span>
   );
 }

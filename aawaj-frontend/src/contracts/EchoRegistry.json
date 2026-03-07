@@ -1,10 +1,5 @@
 [
   {
-    "inputs": [],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
@@ -16,13 +11,13 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "submitter",
+        "name": "reporter",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "string",
-        "name": "ipfsCid",
+        "name": "ipfsHash",
         "type": "string"
       }
     ],
@@ -40,43 +35,105 @@
       },
       {
         "indexed": false,
-        "internalType": "enum EchoRegistry.Status",
+        "internalType": "uint8",
         "name": "newStatus",
         "type": "uint8"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "updatedBy",
+        "type": "address"
       }
     ],
     "name": "StatusUpdated",
     "type": "event"
   },
   {
-    "inputs": [],
-    "name": "government",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "name": "reports",
-    "outputs": [
-      { "internalType": "uint256", "name": "id", "type": "uint256" },
-      { "internalType": "address", "name": "submitter", "type": "address" },
-      { "internalType": "string", "name": "ipfsCid", "type": "string" },
-      { "internalType": "string", "name": "location", "type": "string" },
-      { "internalType": "string", "name": "category", "type": "string" },
+    "anonymous": false,
+    "inputs": [
       {
-        "internalType": "enum EchoRegistry.Status",
-        "name": "status",
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "newLevel",
         "type": "uint8"
       },
-      { "internalType": "uint256", "name": "timestamp", "type": "uint256" }
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "escalatedBy",
+        "type": "address"
+      }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "name": "ReportEscalated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "markedBy",
+        "type": "address"
+      }
+    ],
+    "name": "ResolutionPending",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "confirmedBy",
+        "type": "address"
+      }
+    ],
+    "name": "ResolutionConfirmed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "disputedBy",
+        "type": "address"
+      }
+    ],
+    "name": "ResolutionDisputed",
+    "type": "event"
   },
   {
     "inputs": [
-      { "internalType": "string", "name": "_ipfsCid", "type": "string" },
+      { "internalType": "string", "name": "_ipfsHash", "type": "string" },
       { "internalType": "string", "name": "_location", "type": "string" },
       { "internalType": "string", "name": "_category", "type": "string" }
     ],
@@ -87,12 +144,8 @@
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "_id", "type": "uint256" },
-      {
-        "internalType": "enum EchoRegistry.Status",
-        "name": "_status",
-        "type": "uint8"
-      }
+      { "internalType": "uint256", "name": "_reportId", "type": "uint256" },
+      { "internalType": "uint8", "name": "_newStatus", "type": "uint8" }
     ],
     "name": "updateStatus",
     "outputs": [],
@@ -100,27 +153,125 @@
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "_id", "type": "uint256" }],
+    "inputs": [
+      { "internalType": "uint256", "name": "_reportId", "type": "uint256" }
+    ],
+    "name": "escalateReport",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_reportId", "type": "uint256" }
+    ],
+    "name": "markPendingConfirmation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_reportId", "type": "uint256" }
+    ],
+    "name": "confirmResolution",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_reportId", "type": "uint256" }
+    ],
+    "name": "disputeResolution",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_reportId", "type": "uint256" }
+    ],
     "name": "getReport",
     "outputs": [
       {
         "components": [
           { "internalType": "uint256", "name": "id", "type": "uint256" },
-          { "internalType": "address", "name": "submitter", "type": "address" },
-          { "internalType": "string", "name": "ipfsCid", "type": "string" },
+          { "internalType": "address", "name": "reporter", "type": "address" },
+          { "internalType": "string", "name": "ipfsHash", "type": "string" },
           { "internalType": "string", "name": "location", "type": "string" },
           { "internalType": "string", "name": "category", "type": "string" },
+          { "internalType": "uint8", "name": "status", "type": "uint8" },
+          { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
           {
-            "internalType": "enum EchoRegistry.Status",
-            "name": "status",
+            "internalType": "address",
+            "name": "assignedBody",
+            "type": "address"
+          },
+          {
+            "internalType": "uint8",
+            "name": "escalationLevel",
             "type": "uint8"
           },
-          { "internalType": "uint256", "name": "timestamp", "type": "uint256" }
+          {
+            "internalType": "bool",
+            "name": "reporterConfirmed",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastUpdated",
+            "type": "uint256"
+          }
         ],
         "internalType": "struct EchoRegistry.Report",
         "name": "",
         "type": "tuple"
       }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getReportCount",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "count", "type": "uint256" }
+    ],
+    "name": "getRecentReportIds",
+    "outputs": [
+      { "internalType": "uint256[]", "name": "", "type": "uint256[]" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "reportCount",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "reports",
+    "outputs": [
+      { "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "internalType": "address", "name": "reporter", "type": "address" },
+      { "internalType": "string", "name": "ipfsHash", "type": "string" },
+      { "internalType": "string", "name": "location", "type": "string" },
+      { "internalType": "string", "name": "category", "type": "string" },
+      { "internalType": "uint8", "name": "status", "type": "uint8" },
+      { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
+      { "internalType": "address", "name": "assignedBody", "type": "address" },
+      { "internalType": "uint8", "name": "escalationLevel", "type": "uint8" },
+      { "internalType": "bool", "name": "reporterConfirmed", "type": "bool" },
+      { "internalType": "uint256", "name": "lastUpdated", "type": "uint256" }
     ],
     "stateMutability": "view",
     "type": "function"

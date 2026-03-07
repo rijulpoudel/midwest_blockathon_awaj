@@ -1,11 +1,6 @@
 const PINATA_JWT = import.meta.env.VITE_PINATA_JWT;
 const PINATA_GATEWAY = import.meta.env.VITE_PINATA_GATEWAY;
 
-/**
- * Upload an image file to Pinata IPFS (v1 pinning API — browser-safe).
- * @param {File} file - A File object from a file input
- * @returns {Promise<string>} The IPFS CID of the uploaded image
- */
 export async function uploadImageToPinata(file) {
   try {
     const formData = new FormData();
@@ -13,9 +8,7 @@ export async function uploadImageToPinata(file) {
 
     const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${PINATA_JWT}`,
-      },
+      headers: { Authorization: `Bearer ${PINATA_JWT}` },
       body: formData,
     });
 
@@ -25,19 +18,14 @@ export async function uploadImageToPinata(file) {
     }
 
     const json = await res.json();
-    console.log("Image uploaded to IPFS — CID:", json.IpfsHash);
+    console.log("Image uploaded to IPFS:", json.IpfsHash);
     return json.IpfsHash;
   } catch (err) {
     throw new Error(`Failed to upload image to Pinata: ${err.message}`);
   }
 }
 
-/**
- * Upload a JSON metadata object to Pinata IPFS (v1 pinning API — browser-safe).
- * @param {Object} metadataObject - A plain JS object to store as JSON
- * @returns {Promise<string>} The IPFS CID of the uploaded metadata
- */
-export async function uploadMetadataToPinata(metadataObject) {
+export async function uploadMetadataToPinata(metadata) {
   try {
     const res = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
       method: "POST",
@@ -45,7 +33,7 @@ export async function uploadMetadataToPinata(metadataObject) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${PINATA_JWT}`,
       },
-      body: JSON.stringify({ pinataContent: metadataObject }),
+      body: JSON.stringify({ pinataContent: metadata }),
     });
 
     if (!res.ok) {
@@ -54,18 +42,13 @@ export async function uploadMetadataToPinata(metadataObject) {
     }
 
     const json = await res.json();
-    console.log("Metadata uploaded to IPFS — CID:", json.IpfsHash);
+    console.log("Metadata uploaded to IPFS:", json.IpfsHash);
     return json.IpfsHash;
   } catch (err) {
     throw new Error(`Failed to upload metadata to Pinata: ${err.message}`);
   }
 }
 
-/**
- * Build a gateway URL for an IPFS CID.
- * @param {string} cid - The IPFS CID
- * @returns {string} The full IPFS gateway URL
- */
 export function getIPFSUrl(cid) {
   return `https://${PINATA_GATEWAY}/ipfs/${cid}`;
 }
