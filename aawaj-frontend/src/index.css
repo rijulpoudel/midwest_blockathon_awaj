@@ -1,3 +1,65 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --echo-green: #00c896;
+  --echo-green-dark: #00a67d;
+  --echo-bg: #0a0e1a;
+  --echo-surface: #131929;
+  --echo-border: #1e2640;
+  --echo-text: #e8eaf0;
+  --echo-muted: #6b7280;
+}
+
+body {
+  background-color: #f8fafc;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.echo-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.echo-btn-primary {
+  background: #00c896;
+  color: white;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.echo-btn-primary:hover {
+  background: #00a67d;
+}
+.echo-btn-primary:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.echo-btn-secondary {
+  background: transparent;
+  color: #374151;
+  font-weight: 500;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+}
+
+.echo-btn-danger {
+  background: #dc2626;
+  color: white;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}

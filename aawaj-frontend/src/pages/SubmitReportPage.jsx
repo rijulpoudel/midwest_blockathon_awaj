@@ -1,13 +1,15 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import useWallet from "../hooks/useWallet";
 import useContract from "../hooks/useContract";
-import { uploadImageToPinata, uploadMetadataToPinata } from "../utils/pinata";
-import { REPORT_CATEGORIES } from "../constants";
+import {
+  uploadImageToPinata,
+  uploadMetadataToPinata,
+  getIPFSUrl,
+} from "../utils/pinata";
+import { REPORT_CATEGORIES, NEPAL_LOCATIONS } from "../constants";
 import LoadingSpinner from "../components/LoadingSpinner";
 
-export default function SubmitReportPage() {
-  const { account, connectWallet } = useWallet();
+export default function SubmitReportPage({ account, onConnect }) {
   const { submitReport } = useContract();
 
   const [step, setStep] = useState(1);
@@ -20,6 +22,7 @@ export default function SubmitReportPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [error, setError] = useState("");
+  const [metadataCID, setMetadataCID] = useState(null);
   const fileInputRef = useRef(null);
 
   function handleFileChange(e) {
@@ -40,7 +43,7 @@ export default function SubmitReportPage() {
 
   async function handleSubmit() {
     if (!account) {
-      await connectWallet();
+      await onConnect();
       return;
     }
 
@@ -62,12 +65,14 @@ export default function SubmitReportPage() {
         timestamp: new Date().toISOString(),
         appName: "Echo",
         network: "Polygon Amoy",
+        reporterAddress: account,
       };
-      const metadataCID = await uploadMetadataToPinata(metadata);
+      const mCID = await uploadMetadataToPinata(metadata);
+      setMetadataCID(mCID);
 
       // Step 3: Write to blockchain
       setLoadingMessage("Writing to blockchain — confirm MetaMask popup...");
-      const id = await submitReport(metadataCID, location, category);
+      const id = await submitReport(mCID, location, category);
 
       if (id === null || id === undefined) {
         throw new Error(
@@ -88,9 +93,15 @@ export default function SubmitReportPage() {
   if (step === 3 && reportId !== null) {
     return (
       <div className="max-w-lg mx-auto mt-16 text-center px-4">
-        <div className="text-6xl mb-4">✅</div>
+        <div
+          className="text-6xl mb-4"
+          style={{ animation: "scaleIn 0.5s ease-out" }}
+        >
+          ✅
+        </div>
+        <style>{`@keyframes scaleIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }`}</style>
         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Report Submitted Successfully!
+          Report Submitted!
         </h2>
         <p className="text-gray-600 mb-6">Your Report ID:</p>
         <p
@@ -100,19 +111,31 @@ export default function SubmitReportPage() {
           #{reportId}
         </p>
 
-        <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-8">
+        <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-6">
           <p className="text-yellow-800 font-semibold text-sm">
             ⚠️ SAVE THIS NUMBER — you need it to track your report
           </p>
         </div>
 
+        {metadataCID && (
+          <div className="mb-6">
+            <a
+              href={getIPFSUrl(metadataCID)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:underline"
+            >
+              View Metadata on IPFS ↗
+            </a>
+          </div>
+        )}
+
         <div className="flex flex-col gap-3">
           <Link
-            to={`/track`}
-            className="inline-block text-white font-semibold py-3 px-6 rounded-xl transition shadow-lg"
-            style={{ backgroundColor: "#00c896" }}
+            to={`/track/${reportId}`}
+            className="echo-btn-primary inline-block font-semibold py-3 px-6 rounded-xl shadow-lg"
           >
-            Track My Report
+            Track My Report →
           </Link>
           <a
             href={`https://amoy.polygonscan.com/address/${import.meta.env.VITE_CONTRACT_ADDRESS}`}
@@ -223,10 +246,16 @@ export default function SubmitReportPage() {
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
+              list="nepal-locations"
               placeholder="e.g. Lalitpur Ward 5, near Sahid Gate"
               required
               className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
+            <datalist id="nepal-locations">
+              {NEPAL_LOCATIONS.map((loc) => (
+                <option key={loc} value={loc} />
+              ))}
+            </datalist>
           </div>
 
           <div>
