@@ -40,7 +40,7 @@
       },
       {
         "indexed": false,
-        "internalType": "enum EchoRegistry.Status",
+        "internalType": "enum AawajRegistry.Status",
         "name": "newStatus",
         "type": "uint8"
       }
@@ -56,6 +56,13 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "reportCount",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "name": "reports",
     "outputs": [
@@ -65,7 +72,7 @@
       { "internalType": "string", "name": "location", "type": "string" },
       { "internalType": "string", "name": "category", "type": "string" },
       {
-        "internalType": "enum EchoRegistry.Status",
+        "internalType": "enum AawajRegistry.Status",
         "name": "status",
         "type": "uint8"
       },
@@ -89,7 +96,7 @@
     "inputs": [
       { "internalType": "uint256", "name": "_id", "type": "uint256" },
       {
-        "internalType": "enum EchoRegistry.Status",
+        "internalType": "enum AawajRegistry.Status",
         "name": "_status",
         "type": "uint8"
       }
@@ -111,17 +118,24 @@
           { "internalType": "string", "name": "location", "type": "string" },
           { "internalType": "string", "name": "category", "type": "string" },
           {
-            "internalType": "enum EchoRegistry.Status",
+            "internalType": "enum AawajRegistry.Status",
             "name": "status",
             "type": "uint8"
           },
           { "internalType": "uint256", "name": "timestamp", "type": "uint256" }
         ],
-        "internalType": "struct EchoRegistry.Report",
+        "internalType": "struct AawajRegistry.Report",
         "name": "",
         "type": "tuple"
       }
     ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getReportCount",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   }

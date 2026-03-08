@@ -1,15 +1,11 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import useWallet from "../hooks/useWallet";
-import useContract from "../hooks/useContract";
-import { uploadImageToPinata, uploadMetadataToPinata } from "../utils/pinata";
+import { submitFullReport } from "../utils/submitReport";
+import { getIPFSUrl } from "../utils/pinata";
 import { REPORT_CATEGORIES } from "../constants";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function SubmitReportPage() {
-  const { account, connectWallet } = useWallet();
-  const { submitReport } = useContract();
-
   const [step, setStep] = useState(1);
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -17,6 +13,8 @@ export default function SubmitReportPage() {
   const [category, setCategory] = useState(REPORT_CATEGORIES[0]);
   const [description, setDescription] = useState("");
   const [reportId, setReportId] = useState(null);
+  const [metadataCID, setMetadataCID] = useState(null);
+  const [txHash, setTxHash] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [error, setError] = useState("");
@@ -39,44 +37,22 @@ export default function SubmitReportPage() {
   }
 
   async function handleSubmit() {
-    if (!account) {
-      await connectWallet();
-      return;
-    }
-
     setIsLoading(true);
     setError("");
 
     try {
-      // Step 1: Upload image to IPFS
-      setLoadingMessage("Uploading evidence to IPFS via Pinata...");
-      const imageCID = await uploadImageToPinata(imageFile);
-
-      // Step 2: Upload metadata to IPFS
-      setLoadingMessage("Uploading report metadata to IPFS...");
-      const metadata = {
-        imageCID,
+      const result = await submitFullReport({
+        imageFile,
         location,
         category,
         description,
-        timestamp: new Date().toISOString(),
-        appName: "Echo",
-        network: "Polygon Amoy",
-      };
-      const metadataCID = await uploadMetadataToPinata(metadata);
-
-      // Step 3: Write to blockchain
-      setLoadingMessage("Writing to blockchain — confirm MetaMask popup...");
-      const id = await submitReport(metadataCID, location, category);
-
-      if (id === null || id === undefined) {
-        throw new Error(
-          "Blockchain transaction failed — check your wallet connection and contract address.",
-        );
-      }
+        onProgress: (msg) => setLoadingMessage(msg),
+      });
 
       setIsLoading(false);
-      setReportId(id);
+      setReportId(result.reportId);
+      setMetadataCID(result.metadataCID);
+      setTxHash(result.transactionHash);
       setStep(3);
     } catch (err) {
       setIsLoading(false);
@@ -89,10 +65,13 @@ export default function SubmitReportPage() {
     return (
       <div className="max-w-lg mx-auto mt-16 text-center px-4">
         <div className="text-6xl mb-4">✅</div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Report Submitted Successfully!
+        <h2 className="text-3xl font-bold text-white mb-2">
+          Report Submitted!
         </h2>
-        <p className="text-gray-600 mb-6">Your Report ID:</p>
+        <p className="text-body mb-2">
+          Your evidence is now permanent and tamper-proof.
+        </p>
+        <p className="text-muted text-sm mb-6">Your Report ID:</p>
         <p
           className="text-5xl font-mono font-bold mb-6"
           style={{ color: "#00c896" }}
@@ -100,13 +79,13 @@ export default function SubmitReportPage() {
           #{reportId}
         </p>
 
-        <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-8">
-          <p className="text-yellow-800 font-semibold text-sm">
+        <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-4 mb-6">
+          <p className="text-yellow-400 font-semibold text-sm">
             ⚠️ SAVE THIS NUMBER — you need it to track your report
           </p>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 mb-8">
           <Link
             to={`/track`}
             className="inline-block text-white font-semibold py-3 px-6 rounded-xl transition shadow-lg"
@@ -114,17 +93,35 @@ export default function SubmitReportPage() {
           >
             Track My Report
           </Link>
-          <a
-            href={`https://amoy.polygonscan.com/address/${import.meta.env.VITE_CONTRACT_ADDRESS}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline text-sm"
-          >
-            View on Polygonscan ↗
-          </a>
         </div>
 
-        <p className="text-xs text-gray-400 mt-10">
+        <div className="card text-left space-y-3">
+          <h4 className="font-semibold text-white text-sm">
+            Verification Links
+          </h4>
+          {metadataCID && (
+            <a
+              href={getIPFSUrl(metadataCID)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-accent-blue hover:underline text-sm"
+            >
+              📦 View Metadata on IPFS →
+            </a>
+          )}
+          {txHash && (
+            <a
+              href={`https://amoy.polygonscan.com/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-accent-blue hover:underline text-sm"
+            >
+              ⛓️ View Transaction on Polygonscan →
+            </a>
+          )}
+        </div>
+
+        <p className="text-xs text-muted mt-10">
           Powered by Pinata IPFS + Polygon Blockchain
         </p>
       </div>
@@ -134,11 +131,9 @@ export default function SubmitReportPage() {
   // ─── LOADING OVERLAY ──────────────────────────────────────────
   const loadingOverlay = isLoading && (
     <div className="fixed inset-0 z-50 bg-black/50 flex flex-col items-center justify-center">
-      <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 max-w-sm mx-4">
+      <div className="card p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
         <LoadingSpinner />
-        <p className="text-gray-700 font-medium text-center">
-          {loadingMessage}
-        </p>
+        <p className="text-body font-medium text-center">{loadingMessage}</p>
       </div>
     </div>
   );
@@ -147,16 +142,16 @@ export default function SubmitReportPage() {
     <div className="max-w-xl mx-auto mt-10 px-4">
       {loadingOverlay}
 
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Submit a Report</h1>
-      <p className="text-gray-500 mb-6 text-sm">Step {step} of 2</p>
+      <h1 className="text-3xl font-bold text-white mb-2">Submit a Report</h1>
+      <p className="text-body mb-6 text-sm">Step {step} of 2</p>
 
       {/* Error banner */}
       {error && (
-        <div className="bg-red-50 border border-red-300 rounded-lg p-4 mb-6 flex items-start justify-between">
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4 mb-6 flex items-start justify-between">
+          <p className="text-red-400 text-sm">{error}</p>
           <button
             onClick={() => setError("")}
-            className="text-red-400 hover:text-red-600 ml-4 text-lg leading-none"
+            className="text-red-500 hover:text-red-300 ml-4 text-lg leading-none"
           >
             ✕
           </button>
@@ -170,7 +165,7 @@ export default function SubmitReportPage() {
             onClick={() => fileInputRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            className="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center cursor-pointer hover:border-gray-400 transition"
+            className="border-2 border-dashed border-surface-border rounded-xl p-10 text-center cursor-pointer hover:border-accent-blue/30 transition"
           >
             {preview ? (
               <div>
@@ -179,15 +174,15 @@ export default function SubmitReportPage() {
                   alt="Preview"
                   className="mx-auto rounded-lg max-h-64 object-cover mb-3"
                 />
-                <p className="text-sm text-gray-500">{imageFile?.name}</p>
+                <p className="text-sm text-muted">{imageFile?.name}</p>
               </div>
             ) : (
               <div>
                 <div className="text-4xl mb-2">📸</div>
-                <p className="text-gray-600 font-medium">
+                <p className="text-body font-medium">
                   Click to select or drag & drop a photo
                 </p>
-                <p className="text-gray-400 text-sm mt-1">
+                <p className="text-muted text-sm mt-1">
                   Accepts image files only
                 </p>
               </div>
@@ -216,7 +211,7 @@ export default function SubmitReportPage() {
       {step === 2 && (
         <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-body mb-1">
               Location
             </label>
             <input
@@ -225,18 +220,18 @@ export default function SubmitReportPage() {
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Lalitpur Ward 5, near Sahid Gate"
               required
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border rounded-lg px-4 py-2 text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-body mb-1">
               Category
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border rounded-lg px-4 py-2 text-sm"
             >
               {REPORT_CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
@@ -247,7 +242,7 @@ export default function SubmitReportPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-body mb-1">
               Description
             </label>
             <textarea
@@ -255,14 +250,14 @@ export default function SubmitReportPage() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the problem in detail — what happened, when, how it affects people..."
               rows={4}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+              className="w-full border rounded-lg px-4 py-2 text-sm resize-none"
             />
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={() => setStep(1)}
-              className="flex-1 py-3 rounded-xl font-semibold text-gray-700 border border-gray-300 hover:bg-gray-50 transition"
+              className="flex-1 py-3 rounded-xl font-semibold btn-secondary"
             >
               ← Back
             </button>
@@ -272,7 +267,7 @@ export default function SubmitReportPage() {
               className="flex-1 py-3 rounded-xl font-semibold text-lg text-white transition shadow-lg disabled:opacity-40"
               style={{ backgroundColor: "#00c896" }}
             >
-              {account ? "Submit Report" : "Connect Wallet"}
+              Submit Report
             </button>
           </div>
         </div>

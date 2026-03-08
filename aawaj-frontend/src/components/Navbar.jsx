@@ -5,22 +5,22 @@ export default function Navbar() {
   const { account, connectWallet, isConnecting } = useWallet();
 
   return (
-    <nav className="bg-gray-900 text-white px-6 py-4 flex items-center justify-between shadow-lg">
+    <nav className="bg-surface-card text-white px-6 py-4 flex items-center justify-between border-b border-surface-border">
       <Link to="/" className="text-2xl font-bold tracking-wide">
-        🔊 Echo
+        � AAWAJ
       </Link>
 
       <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-        <Link to="/" className="hover:text-blue-400 transition">
+        <Link to="/" className="hover:text-accent-blue transition">
           Home
         </Link>
-        <Link to="/submit" className="hover:text-blue-400 transition">
+        <Link to="/submit" className="hover:text-accent-blue transition">
           Submit Report
         </Link>
-        <Link to="/track" className="hover:text-blue-400 transition">
+        <Link to="/track" className="hover:text-accent-blue transition">
           Track Report
         </Link>
-        <Link to="/gov" className="hover:text-blue-400 transition">
+        <Link to="/gov" className="hover:text-accent-blue transition">
           Gov Dashboard
         </Link>
       </div>
@@ -28,7 +28,7 @@ export default function Navbar() {
       <button
         onClick={connectWallet}
         disabled={isConnecting}
-        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-medium transition"
+        className="btn-primary px-4 py-2 text-sm disabled:opacity-50"
       >
         {isConnecting
           ? "Connecting..."

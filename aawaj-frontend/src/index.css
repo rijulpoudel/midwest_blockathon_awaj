@@ -1,3 +1,75 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  background-color: #0a0b0f;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.card {
+  background: #1e2736;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.card-glass {
+  background: rgba(30, 39, 54, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.btn-primary {
+  background-color: #c0193a;
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+}
+.btn-primary:hover {
+  background-color: #d41e42;
+}
+
+.btn-secondary {
+  background-color: #1e2736;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s;
+}
+.btn-secondary:hover {
+  background-color: #2a3548;
+}
+
+.text-muted {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.text-body {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+input,
+select,
+textarea {
+  background-color: #151922;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+}
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #6b8cae;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(107, 140, 174, 0.3);
+}

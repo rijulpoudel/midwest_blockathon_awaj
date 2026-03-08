@@ -48,7 +48,16 @@ export default function useContract() {
     try {
       const signer = await getSigner();
       const contract = getContract(signer);
-      const tx = await contract.updateStatus(reportId, newStatus);
+      const feeData = await signer.provider.getFeeData();
+      const minTip = 30000000000n; // 30 gwei — above Amoy minimum
+      const maxTip =
+        feeData.maxPriorityFeePerGas > minTip
+          ? feeData.maxPriorityFeePerGas
+          : minTip;
+      const tx = await contract.updateStatus(reportId, newStatus, {
+        maxPriorityFeePerGas: maxTip,
+        maxFeePerGas: (feeData.maxFeePerGas || 50000000000n) + maxTip,
+      });
       await tx.wait();
       return tx.hash;
     } catch (err) {
@@ -71,13 +80,12 @@ export default function useContract() {
       const result = await contract.getReport(reportId);
       return {
         id: Number(result.id),
-        reporter: result.reporter,
-        ipfsHash: result.ipfsHash,
+        reporter: result.submitter,
+        ipfsHash: result.ipfsCid,
         location: result.location,
         category: result.category,
         status: Number(result.status),
         timestamp: new Date(Number(result.timestamp) * 1000),
-        assignedBody: result.assignedBody,
       };
     } catch (err) {
       setError(`Failed to fetch report: ${err.message}`);

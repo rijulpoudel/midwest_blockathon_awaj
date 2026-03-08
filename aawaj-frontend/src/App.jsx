@@ -8,7 +8,7 @@ import GovDashboardPage from "./pages/GovDashboardPage";
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-surface-bg">
         <Navbar />
         <main className="pb-12">
           <Routes>
