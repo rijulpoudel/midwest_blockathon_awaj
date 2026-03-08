@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/noto-serif": "^5.2.9",
     "ethers": "^6.16.0",
     "pinata": "^2.5.5",
     "react": "^19.2.0",

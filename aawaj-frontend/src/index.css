@@ -1,6 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@900&family=Inter:wght@400;500&family=Playfair+Display:wght@700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Hard reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── CRITICAL: no height:100% here — that traps scroll inside child divs ── */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+  /* NO height: 100% — let content define the page height naturally */
+}
 
 :root {
   --echo-green: #00c896;
@@ -39,6 +57,7 @@ body {
 .echo-btn-primary:hover {
   background: #00a67d;
 }
+
 .echo-btn-primary:disabled {
   background: #9ca3af;
   cursor: not-allowed;
