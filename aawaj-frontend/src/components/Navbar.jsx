@@ -7,6 +7,7 @@ export default function Navbar({ account, onConnect }) {
     { to: "/", label: "Home" },
     { to: "/submit", label: "Submit Report" },
     { to: "/track", label: "Track Report" },
+    { to: "/gov-dashboard", label: "Gov" },
   ];
 
   return (

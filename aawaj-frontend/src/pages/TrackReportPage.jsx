@@ -7,6 +7,7 @@ import ReporterActions from "../components/ReporterActions";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { CATEGORY_ICONS } from "../constants";
 import { getIPFSUrl } from "../utils/pinata";
+import useIPFSImage from "../hooks/useIPFSImage";
 
 function timeAgo(ts) {
   const seconds = Math.floor((Date.now() - ts * 1000) / 1000);
@@ -78,6 +79,8 @@ export default function TrackReportPage({ account, onConnect }) {
     }
     setActionLoading(false);
   }
+
+  const evidenceImageUrl = useIPFSImage(report?.ipfsHash);
 
   const isReporter =
     account &&
@@ -184,14 +187,16 @@ export default function TrackReportPage({ account, onConnect }) {
           {/* Evidence */}
           <div className="echo-card">
             <h3 className="font-semibold text-gray-800 mb-3">Evidence</h3>
-            <img
-              src={getIPFSUrl(report.ipfsHash)}
-              alt="Report evidence"
-              className="w-full rounded-lg mb-3"
-              onError={(e) => {
-                e.target.style.display = "none";
-              }}
-            />
+            {evidenceImageUrl && (
+              <img
+                src={evidenceImageUrl}
+                alt="Report evidence"
+                className="w-full rounded-lg mb-3"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
+              />
+            )}
             <p className="text-xs text-gray-400 mb-2">
               Evidence stored on IPFS via Pinata — content-addressed and
               tamper-proof

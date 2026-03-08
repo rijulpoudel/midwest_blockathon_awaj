@@ -1,7 +1,5 @@
 # 📖 Echo — Complete Beginner's Guide to Every Line of Code
 
-> **Who is this for?** If you're 15, if you've never coded before, if you have no idea what "blockchain" or "React" means — this document will walk you through **every single file** in this project, line by line, in plain English.
-
 ---
 
 ## 📋 Table of Contents
