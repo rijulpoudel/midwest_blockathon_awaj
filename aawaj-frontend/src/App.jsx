@@ -11,9 +11,9 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <Navbar account={account} onConnect={connectWallet} />
-        <main className="pb-12">
+        <main>
           <Routes>
             <Route
               path="/"

@@ -20,6 +20,9 @@ export function getContract(signerOrProvider) {
 }
 
 export function getReadOnlyContract() {
+  if (!CONTRACT_ADDRESS) {
+    throw new Error("VITE_CONTRACT_ADDRESS is not set in your .env file.");
+  }
   const provider = new JsonRpcProvider(import.meta.env.VITE_RPC_URL);
   return new Contract(CONTRACT_ADDRESS, EchoRegistryABI, provider);
 }

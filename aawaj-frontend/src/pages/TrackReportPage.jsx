@@ -8,6 +8,10 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { CATEGORY_ICONS } from "../constants";
 import { getIPFSUrl } from "../utils/pinata";
 import useIPFSImage from "../hooks/useIPFSImage";
+import trackBg from "../assets/TrackReport.png";
+import PageShell from "../components/PageShell";
+import TrackSearchCard from "../components/TrackSearchCard";
+import StatsBar from "../components/StatsBar";
 
 function timeAgo(ts) {
   const seconds = Math.floor((Date.now() - ts * 1000) / 1000);
@@ -21,13 +25,7 @@ function timeAgo(ts) {
 
 export default function TrackReportPage({ account, onConnect }) {
   const { reportId: paramId } = useParams();
-  const {
-    fetchReport,
-    confirmResolution,
-    disputeResolution,
-    isLoading,
-    error,
-  } = useContract();
+  const { fetchReport, confirmResolution, disputeResolution, isLoading, error } = useContract();
   const [inputId, setInputId] = useState(paramId || "");
   const [report, setReport] = useState(null);
   const [notFound, setNotFound] = useState(false);
@@ -53,9 +51,9 @@ export default function TrackReportPage({ account, onConnect }) {
     }
   }, [paramId]);
 
-  function handleSearch(e) {
-    e.preventDefault();
-    loadReport(inputId);
+  function handleSearch(id) {
+    setInputId(id);
+    loadReport(id);
   }
 
   async function handleConfirm() {
@@ -63,9 +61,7 @@ export default function TrackReportPage({ account, onConnect }) {
     try {
       await confirmResolution(report.id);
       await loadReport(report.id);
-    } catch {
-      /* error from hook */
-    }
+    } catch {}
     setActionLoading(false);
   }
 
@@ -74,165 +70,199 @@ export default function TrackReportPage({ account, onConnect }) {
     try {
       await disputeResolution(report.id);
       await loadReport(report.id);
-    } catch {
-      /* error from hook */
-    }
+    } catch {}
     setActionLoading(false);
   }
 
   const evidenceImageUrl = useIPFSImage(report?.ipfsHash);
-
   const isReporter =
     account &&
     report &&
     account.toLowerCase() === report.reporter.toLowerCase();
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 px-4 pb-16">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Track a Report</h1>
+  <PageShell bg={trackBg} overlay="bg-black/0">
+    <h1
+      className="mt-0 mb-4 text-center"
+      style={{
+        fontFamily: "'Inter', Helvetica",
+        fontSize: "40px",
+        fontWeight: "600",
+        background: "linear-gradient(to bottom, #A0BAD5, #FFFFFF)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        backgroundClip: "text",
+      }}
+    >
+      TRACK YOUR REPORT
+    </h1>
 
-      <form onSubmit={handleSearch} className="flex gap-3 mb-8">
-        <input
-          type="number"
-          min="1"
-          value={inputId}
-          onChange={(e) => setInputId(e.target.value)}
-          placeholder="Enter Report ID"
-          required
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        />
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="echo-btn-primary px-6 py-2 rounded-lg font-semibold disabled:opacity-50"
-        >
-          Search
-        </button>
-      </form>
+    <TrackSearchCard onSearch={handleSearch} />
 
-      {isLoading && (
+    <div className="mt-10 w-full max-w-5xl">
+      <StatsBar />
+    </div>
+
+    {isLoading && (
+      <div className="mt-8">
         <LoadingSpinner message="Fetching report from blockchain..." />
-      )}
+      </div>
+    )}
 
-      {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+    {error && (
+      <p className="text-red-400 text-sm mt-4">{error}</p>
+    )}
 
-      {notFound && (
-        <p className="text-gray-500 text-center py-8">
-          No report found with that ID.
-        </p>
-      )}
+    {notFound && (
+      <p className="text-white/60 text-center mt-8">
+        No report found with that ID.
+      </p>
+    )}
 
-      {report && (
-        <div className="space-y-6">
-          {/* Report header */}
-          <div className="echo-card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">
-                  {CATEGORY_ICONS[report.category] || "📋"}
-                </span>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">
-                    Report #{report.id}
-                  </h2>
-                  <p className="text-sm text-gray-500">{report.category}</p>
-                </div>
+    {report && (
+      <div className="w-full max-w-2xl mt-8 space-y-6">
+
+        <div
+          className="rounded-3xl p-6"
+          style={{
+            background: "rgba(180,195,210,0.2)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.25)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">
+                {CATEGORY_ICONS[report.category] || "📋"}
+              </span>
+
+              <div>
+                <h2 className="text-lg font-bold text-white">
+                  Report #{report.id}
+                </h2>
+                <p className="text-sm text-white/60">{report.category}</p>
               </div>
-              <StatusBadge status={report.status} />
             </div>
 
-            <div className="space-y-2 text-sm text-gray-600">
-              <p>📍 {report.location}</p>
-              <p>
-                Submitted on{" "}
-                {new Date(Number(report.timestamp) * 1000).toLocaleDateString(
-                  "en-US",
-                  {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  },
-                )}
-              </p>
-              {report.lastUpdated > 0 && (
-                <p className="text-gray-400">
-                  Last updated {timeAgo(report.lastUpdated)}
-                </p>
-              )}
-              <p>
-                Reporter:{" "}
-                <span className="font-mono text-xs">
-                  {report.reporter.slice(0, 6)}...{report.reporter.slice(-4)}
-                </span>
-              </p>
-              {isReporter && (
-                <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full">
-                  ✓ Your Report
-                </span>
-              )}
-            </div>
+            <StatusBadge status={report.status} />
           </div>
 
-          {/* Escalation Timeline */}
-          <div className="echo-card">
-            <h3 className="font-semibold text-gray-800 mb-3">
-              Escalation Chain
-            </h3>
-            <EscalationTimeline
-              escalationLevel={report.escalationLevel}
-              status={report.status}
-            />
-          </div>
+          <div className="space-y-2 text-sm text-white/70">
+            <p>📍 {report.location}</p>
 
-          {/* Evidence */}
-          <div className="echo-card">
-            <h3 className="font-semibold text-gray-800 mb-3">Evidence</h3>
-            {evidenceImageUrl && (
-              <img
-                src={evidenceImageUrl}
-                alt="Report evidence"
-                className="w-full rounded-lg mb-3"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                }}
-              />
-            )}
-            <p className="text-xs text-gray-400 mb-2">
-              Evidence stored on IPFS via Pinata — content-addressed and
-              tamper-proof
+            <p>
+              Submitted on{" "}
+              {new Date(Number(report.timestamp) * 1000).toLocaleDateString(
+                "en-US",
+                {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                }
+              )}
             </p>
-            <a
-              href={getIPFSUrl(report.ipfsHash)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline"
-            >
-              View on IPFS →
-            </a>
-          </div>
 
-          {/* Reporter Actions */}
-          <ReporterActions
-            report={report}
-            account={account}
-            onConfirm={handleConfirm}
-            onDispute={handleDispute}
-            isLoading={actionLoading}
-          />
+            {report.lastUpdated > 0 && (
+              <p className="text-white/40">
+                Last updated {timeAgo(report.lastUpdated)}
+              </p>
+            )}
 
-          {/* Verification */}
-          <div className="text-center">
-            <a
-              href={`https://amoy.polygonscan.com/address/${import.meta.env.VITE_CONTRACT_ADDRESS}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline"
-            >
-              Verify on Polygonscan →
-            </a>
+            <p>
+              Reporter{" "}
+              <span className="font-mono text-xs">
+                {report.reporter.slice(0, 6)}...
+                {report.reporter.slice(-4)}
+              </span>
+            </p>
+
+            {isReporter && (
+              <span className="inline-block bg-green-500/20 text-green-300 text-xs font-semibold px-2 py-0.5 rounded-full">
+                Your Report
+              </span>
+            )}
           </div>
         </div>
-      )}
-    </div>
-  );
+
+        <div
+          className="rounded-3xl p-6"
+          style={{
+            background: "rgba(180,195,210,0.2)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.25)",
+          }}
+        >
+          <h3 className="font-semibold text-white mb-3">
+            Escalation Chain
+          </h3>
+
+          <EscalationTimeline
+            escalationLevel={report.escalationLevel}
+            status={report.status}
+          />
+        </div>
+
+        <div
+          className="rounded-3xl p-6"
+          style={{
+            background: "rgba(180,195,210,0.2)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.25)",
+          }}
+        >
+          <h3 className="font-semibold text-white mb-3">
+            Evidence
+          </h3>
+
+          {evidenceImageUrl && (
+            <img
+              src={evidenceImageUrl}
+              alt="Report evidence"
+              className="w-full rounded-xl mb-3"
+              onError={(e) => {
+                e.target.style.display = "none";
+              }}
+            />
+          )}
+
+          <p className="text-xs text-white/40 mb-2">
+            Evidence stored on IPFS via Pinata — content-addressed and tamper-proof
+          </p>
+
+          <a
+            href={getIPFSUrl(report.ipfsHash)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-[#00c896] hover:underline"
+          >
+            View on IPFS
+          </a>
+        </div>
+
+        <ReporterActions
+          report={report}
+          account={account}
+          onConfirm={handleConfirm}
+          onDispute={handleDispute}
+          isLoading={actionLoading}
+        />
+
+        <div className="text-center pb-4">
+          <a
+            href={`https://amoy.polygonscan.com/address/${import.meta.env.VITE_CONTRACT_ADDRESS}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-[#00c896] hover:underline"
+          >
+            Verify on Polygonscan
+          </a>
+        </div>
+
+      </div>
+    )}
+  </PageShell>
+);
 }
