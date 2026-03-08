@@ -18,84 +18,129 @@ export default function ActivityFeedCard({ report }) {
   const icon = CATEGORY_ICONS[report.category] || "📋";
   const imageUrl = useIPFSImage(report.ipfsHash);
 
-  const borderColors = {
-    0: "border-l-yellow-400",
-    1: "border-l-blue-400",
-    2: "border-l-orange-400",
-    3: "border-l-orange-500",
-    4: "border-l-red-400",
-    5: "border-l-red-500",
-    6: "border-l-cyan-400",
-    7: "border-l-green-400",
-    8: "border-l-pink-400",
-  };
-
   return (
     <div
       onClick={() => navigate(`/track?id=${report.id}`)}
-      className={`border-l-4 ${borderColors[report.status] || "border-l-gray-300"} cursor-pointer hover:shadow-lg transition-all`}
+      className="cursor-pointer hover:scale-[1.01] transition-all duration-200"
       style={{
-        background: "rgba(255, 255, 255, 0.15)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        border: "1px solid rgba(255, 255, 255, 0.2)",
-        borderRadius: 14,
-        padding: 18,
-        borderLeftWidth: 4,
+        background: "rgba(10, 14, 36, 0.60)",
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+        border: "1.5px solid rgba(100, 160, 220, 0.35)",
+        borderRadius: 20,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "row",
+        minHeight: 200,
       }}
     >
-      <div className="flex items-start gap-3">
-        {imageUrl && (
+      {/* Left: Large image */}
+      {imageUrl ? (
+        <div
+          style={{
+            width: 260,
+            minHeight: 200,
+            flexShrink: 0,
+            position: "relative",
+          }}
+        >
           <img
             src={imageUrl}
             alt=""
-            className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
             onError={(e) => {
-              e.target.style.display = "none";
+              e.target.parentElement.style.display = "none";
             }}
           />
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg">{icon}</span>
-            <span
-              className="font-semibold text-sm truncate"
-              style={{ color: "white" }}
-            >
-              {report.category}
-            </span>
-            <span
-              className="text-xs rounded px-1.5 py-0.5 font-mono"
-              style={{
-                background: "rgba(255,255,255,0.15)",
-                color: "rgba(255,255,255,0.7)",
-              }}
-            >
-              #{report.id}
-            </span>
-          </div>
-          <p
-            className="text-xs truncate"
-            style={{ color: "rgba(255,255,255,0.7)" }}
-          >
-            📍 {report.location}
-          </p>
-          <div
-            className="flex items-center gap-3 mt-2 text-xs"
-            style={{ color: "rgba(255,255,255,0.5)" }}
-          >
-            <span>
-              {report.reporter?.slice(0, 6)}...{report.reporter?.slice(-4)}
-            </span>
-            <span>•</span>
-            <span>
-              {report.timestamp instanceof Date
-                ? timeAgo(report.timestamp)
-                : timeAgo(new Date(report.timestamp * 1000))}
-            </span>
-          </div>
         </div>
-        <StatusBadge status={report.status} />
+      ) : (
+        <div
+          style={{
+            width: 260,
+            minHeight: 200,
+            flexShrink: 0,
+            background: "rgba(255,255,255,0.05)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 40,
+          }}
+        >
+          {icon}
+        </div>
+      )}
+
+      {/* Right: Content */}
+      <div
+        style={{
+          flex: 1,
+          padding: "28px 32px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 8,
+          }}
+        >
+          <span style={{ fontSize: 20, color: "#60a5fa" }}>✓</span>
+          <span style={{ fontSize: 15, color: "rgba(255,255,255,0.65)" }}>
+            📍 {report.location}
+          </span>
+          <span
+            style={{
+              marginLeft: "auto",
+              fontSize: 13,
+              background: "rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.6)",
+              padding: "2px 10px",
+              borderRadius: 999,
+              fontFamily: "monospace",
+            }}
+          >
+            #{report.id}
+          </span>
+        </div>
+
+        <h3
+          style={{
+            fontSize: 26,
+            fontWeight: 700,
+            color: "white",
+            margin: "0 0 10px 0",
+            lineHeight: 1.2,
+          }}
+        >
+          {icon} {report.category}
+        </h3>
+
+        <p
+          style={{
+            fontSize: 15,
+            color: "rgba(255,255,255,0.7)",
+            lineHeight: 1.6,
+            margin: 0,
+          }}
+        >
+          {report.reporter?.slice(0, 6)}...{report.reporter?.slice(-4)} ·{" "}
+          {report.timestamp instanceof Date
+            ? timeAgo(report.timestamp)
+            : timeAgo(new Date(report.timestamp * 1000))}
+        </p>
+
+        <div style={{ marginTop: 14 }}>
+          <StatusBadge status={report.status} />
+        </div>
       </div>
     </div>
   );

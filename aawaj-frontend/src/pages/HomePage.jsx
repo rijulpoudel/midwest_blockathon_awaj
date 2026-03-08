@@ -13,6 +13,194 @@ const YAK_H = Math.round(450 * (2464 / 2156));
 const FLOWER_W = 200;
 const FLOWER_H = Math.round(200 * (663 / 288));
 
+// ── Gemini AI Fact Section ─────────────────────────────────────
+function GeminiFactSection() {
+  const [fact, setFact] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  async function fetchFact(attempt = 0) {
+    setLoading(true);
+    setError(null);
+    try {
+      const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!API_KEY) {
+        setError("hidden");
+        setLoading(false);
+        return;
+      }
+      const prompt =
+        "Give me one powerful, concise fact (2-3 sentences max) about corruption in Nepal and why transparent citizen reporting matters. Focus on real statistics or situations. Do not use markdown formatting. Just plain text.";
+      const res = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-goog-api-key": API_KEY,
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.9,
+              maxOutputTokens: 400,
+            },
+          }),
+        },
+      );
+      if (res.status === 429 && attempt < 2) {
+        // Rate limited — wait and retry
+        await new Promise((r) => setTimeout(r, (attempt + 1) * 5000));
+        return fetchFact(attempt + 1);
+      }
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => "");
+        console.error("Gemini API error:", res.status, errBody);
+        throw new Error("Gemini API error");
+      }
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      setFact(text.trim());
+    } catch {
+      setError("Could not load fact.");
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchFact();
+  }, []);
+
+  if (error === "hidden") return null;
+
+  return (
+    <section
+      style={{ maxWidth: 960, margin: "0 auto", padding: "0 16px 40px" }}
+    >
+      <div
+        style={{
+          borderRadius: 24,
+          padding: "56px 56px",
+          minHeight: 260,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          background:
+            "linear-gradient(0deg, rgba(10, 14, 36, 0.35) 0%, rgba(10, 14, 36, 0.22) 100%)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          border: "1.5px solid rgba(100, 160, 220, 0.30)",
+          textAlign: "center",
+          position: "relative",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            marginBottom: 20,
+          }}
+        >
+          <span style={{ fontSize: 28 }}>✦</span>
+          <h2
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: 28,
+              fontWeight: 700,
+              color: "white",
+              margin: 0,
+              textShadow: "0 2px 8px rgba(0,0,0,0.4)",
+            }}
+          >
+            Did You Know?
+          </h2>
+          <span style={{ fontSize: 28 }}>✦</span>
+        </div>
+
+        {loading ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                width: "70%",
+                height: 14,
+                background: "rgba(255,255,255,0.15)",
+                borderRadius: 4,
+              }}
+            />
+            <div
+              style={{
+                width: "50%",
+                height: 14,
+                background: "rgba(255,255,255,0.10)",
+                borderRadius: 4,
+              }}
+            />
+          </div>
+        ) : error ? (
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
+            {error}
+          </p>
+        ) : (
+          <p
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: 20,
+              color: "rgba(255,255,255,0.95)",
+              lineHeight: 1.8,
+              margin: 0,
+              maxWidth: 760,
+              textShadow: "0 1px 6px rgba(0,0,0,0.3)",
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}
+          >
+            {fact}
+          </p>
+        )}
+
+        <button
+          onClick={fetchFact}
+          disabled={loading}
+          style={{
+            marginTop: 28,
+            background: "rgba(255,255,255,0.15)",
+            border: "1px solid rgba(255,255,255,0.25)",
+            color: "white",
+            fontSize: 15,
+            fontWeight: 600,
+            padding: "10px 24px",
+            borderRadius: 999,
+            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading ? 0.5 : 1,
+            transition: "all 0.2s",
+          }}
+        >
+          {loading ? "Loading…" : "↻ New Fact"}
+        </button>
+
+        <p
+          style={{
+            fontSize: 11,
+            color: "rgba(255,255,255,0.35)",
+            marginTop: 16,
+          }}
+        >
+          Powered by Gemini AI
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function NepalNewsSection() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -592,9 +780,9 @@ export default function HomePage() {
         <section
           style={{
             padding: "20px 16px",
-            background: "rgba(255, 255, 255, 0.13)",
-            backdropFilter: "blur(8px)",
-            WebkitBackdropFilter: "blur(8px)",
+            background: "rgba(10, 14, 36, 0.45)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
           }}
         >
           <div
@@ -708,20 +896,20 @@ export default function HomePage() {
 
         {/* Live feed */}
         <section
-          style={{ maxWidth: 768, margin: "0 auto", padding: "24px 16px" }}
+          style={{ maxWidth: 960, margin: "0 auto", padding: "24px 16px" }}
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
-              marginBottom: 4,
+              gap: 10,
+              marginBottom: 6,
             }}
           >
             <span
               style={{
-                width: 10,
-                height: 10,
+                width: 12,
+                height: 12,
                 borderRadius: "50%",
                 background: "#ef4444",
                 display: "inline-block",
@@ -730,7 +918,7 @@ export default function HomePage() {
             />
             <h2
               style={{
-                fontSize: 20,
+                fontSize: 24,
                 fontWeight: 700,
                 color: "white",
                 margin: 0,
@@ -739,7 +927,13 @@ export default function HomePage() {
               Live on Blockchain
             </h2>
           </div>
-          <p style={{ fontSize: 14, color: "#9ca3af", marginBottom: 24 }}>
+          <p
+            style={{
+              fontSize: 15,
+              color: "rgba(255,255,255,0.55)",
+              marginBottom: 24,
+            }}
+          >
             Real-time report activity from Polygon Amoy
           </p>
 
@@ -787,7 +981,7 @@ export default function HomePage() {
               No reports yet. Be the first to report a problem.
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               {feed.map((report) => (
                 <ActivityFeedCard key={report.id} report={report} />
               ))}
@@ -797,8 +991,8 @@ export default function HomePage() {
           {lastUpdated && (
             <p
               style={{
-                fontSize: 12,
-                color: "#9ca3af",
+                fontSize: 13,
+                color: "rgba(255,255,255,0.4)",
                 marginTop: 16,
                 textAlign: "center",
               }}
@@ -811,7 +1005,39 @@ export default function HomePage() {
         {/* Nepal News */}
         <NepalNewsSection />
 
-        <div style={{ height: 40 }} />
+        {/* Gemini AI Fact */}
+        <GeminiFactSection />
+
+        {/* Footer */}
+        <footer
+          style={{
+            textAlign: "center",
+            padding: "32px 16px 24px",
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "'Noto Serif', serif",
+              fontSize: 18,
+              fontWeight: 700,
+              color: "rgba(255,255,255,0.6)",
+              margin: 0,
+              letterSpacing: 2,
+            }}
+          >
+            AAWAJ
+          </p>
+          <p
+            style={{
+              fontSize: 12,
+              color: "rgba(255,255,255,0.3)",
+              marginTop: 6,
+            }}
+          >
+            © {new Date().getFullYear()} Aawaj — Your voice on the blockchain.
+          </p>
+        </footer>
       </div>
 
       <style>{`
