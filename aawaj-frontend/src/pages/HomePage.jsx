@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import useContract from "../hooks/useContract";
 import ActivityFeedCard from "../components/ActivityFeedCard";
 import { getReadOnlyContract } from "../utils/contract";
-import bgImage from "../assets/home-page.png";
+import bgImage from "../assets/home_asset/home-page.png";
 
 // ── Nepal News Component ─────────────────────────────────────────────────────
 function NepalNewsSection() {
@@ -236,11 +236,12 @@ export default function HomePage({ account, onConnect }) {
     <div
       style={{
         backgroundImage: `url(${bgImage})`,
-        backgroundSize: "1440px 3381px",
+        backgroundSize: "100% auto",   // stretches width to fit, height scales proportionally
         backgroundRepeat: "no-repeat",
         backgroundPosition: "top center",
-        minHeight: "3381px",
+        minHeight: `calc(100vw * (3381 / 1440))`, // keeps height = image aspect ratio at current viewport width
         width: "100%",
+        overflow: "hidden",
       }}
     >
 
