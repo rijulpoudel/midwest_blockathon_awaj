@@ -1,222 +1,825 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import { getReadOnlyContract } from "../utils/contract";
-import { STATUS_LABELS } from "../constants";
-import useIPFSImage from "../hooks/useIPFSImage";
+import ActivityFeedCard from "../components/ActivityFeedCard";
+import bgImage from "../assets/home_asset/home-page.png";
+import mountainImage from "../assets/home_asset/mountain.png";
+import yakImage from "../assets/home_asset/yak.png";
+import flowerImage from "../assets/home_asset/flower.png";
 
-const STATUS_COLORS = [
-  "bg-yellow-900 text-yellow-300", // 0 Submitted
-  "bg-blue-900 text-blue-300", // 1 In Review
-  "bg-orange-900 text-orange-300", // 2 Ward
-  "bg-orange-800 text-orange-200", // 3 Municipality
-  "bg-red-900 text-red-300", // 4 Province
-  "bg-red-800 text-red-200", // 5 Federal
-  "bg-cyan-900 text-cyan-300", // 6 Gov Resolved
-  "bg-green-900 text-green-300", // 7 Confirmed
-  "bg-pink-900 text-pink-300", // 8 Disputed
-];
+const MOUNTAIN_RATIO = 1051 / 1440;
+const BG_RATIO = 3381 / 1440;
+const YAK_W = 450;
+const YAK_H = Math.round(450 * (2464 / 2156));
+const FLOWER_W = 200;
+const FLOWER_H = Math.round(200 * (663 / 288));
 
-function useRecentReports() {
-  const [reports, setReports] = useState([]);
+function NepalNewsSection() {
+  const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function load() {
+    async function fetchNews() {
+      setLoading(true);
       try {
-        const contract = getReadOnlyContract();
-
-        // Try event logs first for efficiency
-        const filter = contract.filters.ReportSubmitted();
-        let events = [];
-        try {
-          events = await contract.queryFilter(filter, -100000);
-        } catch {
-          try {
-            events = await contract.queryFilter(filter, -10000);
-          } catch {
-            /* public RPC may limit range */
-          }
-        }
-
-        let ids = [];
-        if (events.length > 0) {
-          ids = [...new Set(events.map((e) => Number(e.args.id)))]
-            .sort((a, b) => b - a)
-            .slice(0, 10);
-        } else {
-          // Fallback: probe IDs 1-20
-          const probes = await Promise.allSettled(
-            Array.from({ length: 20 }, (_, i) => contract.getReport(i + 1)),
-          );
-          ids = probes
-            .map((r, i) =>
-              r.status === "fulfilled" &&
-              r.value.submitter !== "0x0000000000000000000000000000000000000000"
-                ? i + 1
-                : null,
-            )
-            .filter(Boolean)
-            .reverse();
-        }
-
-        if (ids.length === 0) {
+        const API_KEY = import.meta.env.VITE_GNEWS_API_KEY;
+        if (!API_KEY) {
+          setError("hidden");
           setLoading(false);
           return;
         }
+        const res = await fetch(
+          `https://gnews.io/api/v4/search?q=nepal+government+OR+nepal+civic&lang=en&max=2&apikey=${encodeURIComponent(API_KEY)}`,
+        );
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setArticles(data.articles || []);
+      } catch {
+        setError("Could not load news.");
+      }
+      setLoading(false);
+    }
+    fetchNews();
+  }, []);
 
-        const raw = await Promise.all(ids.map((id) => contract.getReport(id)));
-        setReports(
-          raw.map((r) => ({
+  if (error === "hidden") return null;
+
+  if (loading) {
+    return (
+      <section
+        style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px 80px" }}
+      >
+        <div style={{ display: "flex", gap: 100 }}>
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                borderRadius: 16,
+                overflow: "hidden",
+                background: "rgba(255,255,255,0.55)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(0,200,150,0.18)",
+                minHeight: 260,
+              }}
+            >
+              <div style={{ height: 160, background: "#e5e7eb" }} />
+              <div style={{ padding: 20 }}>
+                <div
+                  style={{
+                    height: 12,
+                    background: "#e5e7eb",
+                    borderRadius: 4,
+                    width: "75%",
+                    marginBottom: 10,
+                  }}
+                />
+                <div
+                  style={{
+                    height: 12,
+                    background: "#e5e7eb",
+                    borderRadius: 4,
+                    width: "50%",
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section
+        style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px 80px" }}
+      >
+        <p style={{ textAlign: "center", color: "#9ca3af", fontSize: 14 }}>
+          {error}
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px 80px" }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 24,
+        }}
+      >
+        <span style={{ fontSize: 24 }}>🇳🇵</span>
+        <h2
+          style={{ fontSize: 24, fontWeight: 700, color: "white", margin: 0 }}
+        >
+          Nepal in the News
+        </h2>
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            padding: "2px 8px",
+            borderRadius: 999,
+            background: "rgba(0,200,150,0.12)",
+            color: "#00c896",
+            marginLeft: 8,
+          }}
+        >
+          Live
+        </span>
+      </div>
+      <div style={{ display: "flex", gap: 100 }}>
+        {articles.slice(0, 2).map((article, idx) => (
+          <NewsCard key={idx} article={article} />
+        ))}
+        {articles.length < 2 &&
+          Array.from({ length: 2 - articles.length }).map((_, i) => (
+            <div
+              key={`placeholder-${i}`}
+              style={{
+                flex: 1,
+                borderRadius: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#9ca3af",
+                fontSize: 14,
+                background: "rgba(255,255,255,0.25)",
+                backdropFilter: "blur(12px)",
+                border: "1px dashed rgba(0,200,150,0.2)",
+                minHeight: 200,
+              }}
+            >
+              No article available
+            </div>
+          ))}
+      </div>
+    </section>
+  );
+}
+
+function NewsCard({ article }) {
+  const date = article.publishedAt
+    ? new Date(article.publishedAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null;
+
+  return (
+    <a
+      href={article.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        flex: 1,
+        display: "block",
+        borderRadius: 16,
+        overflow: "hidden",
+        background: "rgba(255,255,255,0.55)",
+        backdropFilter: "blur(16px)",
+        border: "1px solid rgba(0,200,150,0.18)",
+        boxShadow: "0 4px 24px rgba(0,200,150,0.07)",
+        textDecoration: "none",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-4px)";
+        e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,200,150,0.15)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,200,150,0.07)";
+      }}
+    >
+      {article.image ? (
+        <div style={{ height: 176, overflow: "hidden", background: "#f3f4f6" }}>
+          <img
+            src={article.image}
+            alt={article.title}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            onError={(e) => {
+              e.target.parentElement.style.display = "none";
+            }}
+          />
+        </div>
+      ) : (
+        <div
+          style={{
+            height: 96,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background:
+              "linear-gradient(135deg, rgba(0,200,150,0.12), rgba(10,14,26,0.08))",
+          }}
+        >
+          <span style={{ color: "#d1d5db", fontSize: 14 }}>No image</span>
+        </div>
+      )}
+      <div style={{ padding: 20 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 12,
+          }}
+        >
+          {article.source?.name && (
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                padding: "2px 8px",
+                borderRadius: 999,
+                background: "rgba(0,200,150,0.12)",
+                color: "#00a87a",
+              }}
+            >
+              {article.source.name}
+            </span>
+          )}
+          {date && (
+            <span
+              style={{ fontSize: 12, color: "#6b7280", marginLeft: "auto" }}
+            >
+              {date}
+            </span>
+          )}
+        </div>
+        <h3
+          style={{
+            fontSize: 15,
+            fontWeight: 700,
+            color: "#1f2937",
+            lineHeight: 1.4,
+            margin: 0,
+            display: "-webkit-box",
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
+        >
+          {article.title}
+        </h3>
+        <p
+          style={{
+            fontSize: 12,
+            color: "#9ca3af",
+            marginTop: 12,
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+          }}
+        >
+          <span>📍</span> Nepal
+        </p>
+      </div>
+    </a>
+  );
+}
+
+export default function HomePage() {
+  const [feed, setFeed] = useState([]);
+  const [totalReports, setTotalReports] = useState(null);
+  const [resolvedCount, setResolvedCount] = useState(0);
+  const [feedLoading, setFeedLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [scrollY, setScrollY] = useState(0);
+  const [mountainHeightPx, setMountainHeightPx] = useState(
+    window.innerWidth * MOUNTAIN_RATIO,
+  );
+  const textRef = useRef(null);
+
+  useEffect(() => {
+    function onScroll() {
+      setScrollY(window.scrollY);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    function onResize() {
+      setMountainHeightPx(window.innerWidth * MOUNTAIN_RATIO);
+    }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  function getTextTop() {
+    return Math.min(114 + scrollY, 209);
+  }
+
+  // Load reports from blockchain events
+  async function loadFeed() {
+    setFeedLoading(true);
+    try {
+      const contract = getReadOnlyContract();
+      const count = Number(await contract.getReportCount());
+      setTotalReports(count);
+
+      const reports = [];
+      const start = Math.max(1, count - 9);
+      for (let i = count; i >= start; i--) {
+        try {
+          const r = await contract.getReport(i);
+          reports.push({
             id: Number(r.id),
+            reporter: r.submitter,
             ipfsHash: r.ipfsCid,
             location: r.location,
             category: r.category,
             status: Number(r.status),
-            timestamp: new Date(Number(r.timestamp) * 1000),
-          })),
-        );
-      } catch (err) {
-        console.warn("Feed load failed:", err);
-      } finally {
-        setLoading(false);
+            timestamp: Number(r.timestamp),
+          });
+        } catch {
+          /* skip */
+        }
       }
+      setFeed(reports);
+      setResolvedCount(reports.filter((r) => r.status === 7).length);
+      setLastUpdated(new Date());
+    } catch {
+      /* silent */
     }
-    load();
+    setFeedLoading(false);
+  }
+
+  useEffect(() => {
+    loadFeed();
+    const interval = setInterval(loadFeed, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  return { reports, loading };
-}
-
-export default function HomePage() {
-  const { reports, loading } = useRecentReports();
-
-  return (
-    <div className="min-h-[calc(100vh-64px)] flex flex-col items-center text-center px-4 py-16">
-      <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-4">
-        📢 AAWAJ
-      </h1>
-      <p className="text-xl text-gray-300 max-w-2xl mb-2">
-        Your Voice, On-Chain
-      </p>
-      <p className="text-gray-400 max-w-xl mb-10">
-        Submit evidence of civic issues directly to the blockchain. No wallet
-        needed. Your report is permanent, transparent, and tamper-proof —
-        powered by Polygon and IPFS via Pinata.
-      </p>
-
-      <div className="flex flex-col sm:flex-row gap-4 mb-20">
-        <Link
-          to="/submit"
-          className="btn-primary px-8 py-3 text-lg font-semibold"
-        >
-          Submit a Report
-        </Link>
-        <Link
-          to="/track"
-          className="btn-secondary px-8 py-3 text-lg font-semibold"
-        >
-          Track a Report
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mb-20">
-        <FeatureCard
-          icon="📸"
-          title="Upload Evidence"
-          desc="Photos are stored permanently on IPFS via Pinata — nobody can delete them."
-        />
-        <FeatureCard
-          icon="⛓️"
-          title="On-Chain Record"
-          desc="Every report is written to the Polygon blockchain for full transparency."
-        />
-        <FeatureCard
-          icon="🏛️"
-          title="Gov Accountability"
-          desc="Government officials update statuses on-chain. All actions are public."
-        />
-      </div>
-
-      {/* ── Recent Reports Feed ── */}
-      <div className="w-full max-w-3xl text-left">
-        <h2 className="text-2xl font-bold text-white mb-1">Recent Reports</h2>
-        <p className="text-sm text-muted mb-6">
-          Live from the Polygon blockchain
-        </p>
-
-        {loading ? (
-          <div className="text-center py-12 text-muted">Loading reports…</div>
-        ) : reports.length === 0 ? (
-          <div className="card text-center py-10 text-muted">
-            No reports yet.{" "}
-            <Link to="/submit" className="text-accent-blue underline">
-              Be the first!
-            </Link>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {reports.map((r) => (
-              <FeedCard key={r.id} report={r} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function FeedCard({ report }) {
-  const imageUrl = useIPFSImage(report.ipfsHash);
+  const textTop = getTextTop();
+  const statsBarTop = mountainHeightPx;
+  const yakTop = statsBarTop - YAK_H * 0.6;
+  const flowerTop = statsBarTop - FLOWER_H * 0.5;
 
   return (
-    <Link
-      to={`/track?id=${report.id}`}
-      className="card flex items-center gap-4 hover:border-accent-blue border border-transparent transition-colors"
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        minHeight: `calc(100vw * ${BG_RATIO})`,
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: "115% auto",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "top center",
+      }}
     >
-      <div className="w-20 h-20 rounded-lg bg-surface-bg flex-shrink-0 overflow-hidden">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt=""
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.style.display = "none";
-            }}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-2xl text-muted">
-            📷
-          </div>
-        )}
+      {/* z:1 — AAWAJ text */}
+      <div
+        ref={textRef}
+        style={{
+          position: "absolute",
+          top: textTop,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          zIndex: 1,
+          pointerEvents: "none",
+          userSelect: "none",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "'Noto Serif', serif",
+            fontSize: "230px",
+            fontWeight: 900,
+            lineHeight: 1,
+            letterSpacing: "-4px",
+            background: "linear-gradient(164deg, #A0BAD5 0%, #FFFFFF 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            display: "inline-block",
+          }}
+        >
+          AAWAJ
+        </span>
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2">
-          <p className="font-semibold text-white truncate">
-            #{report.id} — {report.category}
-          </p>
-          <span
-            className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap ${
-              STATUS_COLORS[report.status] ?? "bg-gray-800 text-gray-300"
-            }`}
-          >
-            {STATUS_LABELS[report.status] ?? "Unknown"}
-          </span>
-        </div>
-        <p className="text-sm text-muted truncate">{report.location}</p>
-        <p className="text-xs text-muted mt-1">
-          {report.timestamp.toLocaleDateString()}
-        </p>
-      </div>
-    </Link>
-  );
-}
 
-function FeatureCard({ icon, title, desc }) {
-  return (
-    <div className="card text-left">
-      <div className="text-3xl mb-3">{icon}</div>
-      <h3 className="font-bold text-white mb-1">{title}</h3>
-      <p className="text-sm text-body">{desc}</p>
+      {/* z:2 — Mountain PNG */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 2,
+          pointerEvents: "none",
+          lineHeight: 0,
+        }}
+      >
+        <img
+          src={mountainImage}
+          alt=""
+          style={{ width: "100%", display: "block" }}
+        />
+      </div>
+
+      {/* z:4 — Yak left */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          top: yakTop,
+          zIndex: 4,
+          pointerEvents: "none",
+        }}
+      >
+        <img
+          src={yakImage}
+          alt="Yak"
+          style={{
+            width: YAK_W,
+            height: YAK_H,
+            display: "block",
+            objectFit: "contain",
+          }}
+        />
+      </div>
+
+      {/* z:4 — Flower right */}
+      <div
+        style={{
+          position: "absolute",
+          right: 0,
+          top: flowerTop,
+          zIndex: 4,
+          pointerEvents: "none",
+        }}
+      >
+        <img
+          src={flowerImage}
+          alt="Flower"
+          style={{
+            width: FLOWER_W,
+            height: FLOWER_H,
+            display: "block",
+            objectFit: "contain",
+          }}
+        />
+      </div>
+
+      {/* z:3 — Page content */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 3,
+          paddingTop: `${mountainHeightPx * 0.62}px`,
+        }}
+      >
+        {/* Glossy text box */}
+        <div style={{ padding: "0px 60px 10px 70px" }}>
+          <div
+            style={{
+              width: "100%",
+              borderRadius: 60,
+              padding: "50px 20px",
+              background:
+                "linear-gradient(0deg, rgba(255, 255, 255, 0.13) 0%, rgba(255, 255, 255, 0.55) 100%)",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(40px)",
+              border: "1px solid rgba(0, 0, 0, 0.06)",
+              display: "flex",
+              flexDirection: "row",
+              gap: 10,
+            }}
+          >
+            <div style={{ flex: 1, padding: "0 24px" }}>
+              <p
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 18,
+                  color: "#2F3A43",
+                  margin: "0 0 8px 0",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                ✧˖°
+                <br />
+                <strong>Your voice, permanent and loud.</strong>
+              </p>
+              <p
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 15,
+                  color: "white",
+                  margin: 0,
+                  lineHeight: 1.75,
+                }}
+              >
+                The people&apos;s record — permanent, tamper-proof, forever.{" "}
+                <br />
+                When officials deny, when reports disappear, when voices go
+                unheard — Aawaj writes it all to the blockchain. Permanently.
+              </p>
+            </div>
+            <div style={{ flex: 1, padding: "0 24px" }}>
+              <p
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 18,
+                  color: "#2F3A43",
+                  margin: "0 0 10px 0",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                ✧˖°
+                <br />
+                <strong>Speak. Report. Be seen.</strong>
+              </p>
+              <p
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 15,
+                  color: "white",
+                  margin: 0,
+                  lineHeight: 1.75,
+                }}
+              >
+                Every complaint deserves a witness. Corruption thrives in
+                silence.
+                <br />
+                Aawaj makes every civic report public, verified, and impossible
+                to erase — powered by your community and the blockchain.
+              </p>
+            </div>
+            <div style={{ flex: 1, padding: "0 24px" }}>
+              <p
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 18,
+                  color: "#2F3A43",
+                  margin: "0 0 10px 0",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                ✧˖°
+                <br />
+                <strong>Because someone has to listen.</strong>
+              </p>
+              <p
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 15,
+                  color: "white",
+                  margin: 0,
+                  lineHeight: 1.75,
+                }}
+              >
+                Built for the districts nobody listens to. From Humla to
+                Kathmandu, every citizen deserves to be heard. Submit your
+                report, get it confirmed by your community, and watch it live
+                on-chain — where no one can touch it.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats bar */}
+        <section
+          style={{
+            padding: "20px 16px",
+            background: "rgba(255, 255, 255, 0.13)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 520,
+              margin: "0 auto",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 60,
+              textAlign: "center",
+            }}
+          >
+            <div style={{ minWidth: 100 }}>
+              <p
+                style={{
+                  fontSize: 32,
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  margin: 0,
+                  lineHeight: 1.2,
+                }}
+              >
+                {totalReports === null ? (
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 40,
+                      height: 32,
+                      background: "rgba(255,255,255,0.2)",
+                      borderRadius: 4,
+                    }}
+                  />
+                ) : (
+                  totalReports
+                )}
+              </p>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.85)",
+                  marginTop: 6,
+                  fontWeight: 500,
+                }}
+              >
+                Total Reports
+              </p>
+            </div>
+            <div
+              style={{
+                width: 1,
+                height: 40,
+                background: "rgba(255,255,255,0.25)",
+              }}
+            />
+            <div style={{ minWidth: 100 }}>
+              <p
+                style={{
+                  fontSize: 32,
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  margin: 0,
+                  lineHeight: 1.2,
+                }}
+              >
+                {resolvedCount}
+              </p>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.85)",
+                  marginTop: 6,
+                  fontWeight: 500,
+                }}
+              >
+                Resolved
+              </p>
+            </div>
+            <div
+              style={{
+                width: 1,
+                height: 40,
+                background: "rgba(255,255,255,0.25)",
+              }}
+            />
+            <div style={{ minWidth: 100 }}>
+              <p
+                style={{
+                  fontSize: 32,
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  margin: 0,
+                  lineHeight: 1.2,
+                }}
+              >
+                5+
+              </p>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.85)",
+                  marginTop: 6,
+                  fontWeight: 500,
+                }}
+              >
+                Active Wards
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Live feed */}
+        <section
+          style={{ maxWidth: 768, margin: "0 auto", padding: "24px 16px" }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 4,
+            }}
+          >
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                background: "#ef4444",
+                display: "inline-block",
+                animation: "redpulse 1.5s ease-in-out infinite",
+              }}
+            />
+            <h2
+              style={{
+                fontSize: 20,
+                fontWeight: 700,
+                color: "white",
+                margin: 0,
+              }}
+            >
+              Live on Blockchain
+            </h2>
+          </div>
+          <p style={{ fontSize: 14, color: "#9ca3af", marginBottom: 24 }}>
+            Real-time report activity from Polygon Amoy
+          </p>
+
+          {feedLoading ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="echo-card">
+                  <div
+                    style={{
+                      height: 16,
+                      background: "#e5e7eb",
+                      borderRadius: 4,
+                      width: "75%",
+                      marginBottom: 12,
+                    }}
+                  />
+                  <div
+                    style={{
+                      height: 12,
+                      background: "#e5e7eb",
+                      borderRadius: 4,
+                      width: "50%",
+                      marginBottom: 8,
+                    }}
+                  />
+                  <div
+                    style={{
+                      height: 12,
+                      background: "#e5e7eb",
+                      borderRadius: 4,
+                      width: "33%",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : feed.length === 0 ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "48px 0",
+                color: "#9ca3af",
+              }}
+            >
+              No reports yet. Be the first to report a problem.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {feed.map((report) => (
+                <ActivityFeedCard key={report.id} report={report} />
+              ))}
+            </div>
+          )}
+
+          {lastUpdated && (
+            <p
+              style={{
+                fontSize: 12,
+                color: "#9ca3af",
+                marginTop: 16,
+                textAlign: "center",
+              }}
+            >
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </p>
+          )}
+        </section>
+
+        {/* Nepal News */}
+        <NepalNewsSection />
+
+        <div style={{ height: 40 }} />
+      </div>
+
+      <style>{`
+        @keyframes redpulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
     </div>
   );
 }

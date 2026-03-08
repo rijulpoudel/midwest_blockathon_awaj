@@ -48,3 +48,83 @@ export const REPORT_CATEGORIES = [
   "Environmental",
   "Other",
 ];
+
+// Category icons for display
+export const CATEGORY_ICONS = {
+  "Road Damage": "🛣️",
+  "Water Supply": "💧",
+  Electricity: "⚡",
+  "Waste Management": "🗑️",
+  "Public Safety": "🚨",
+  Corruption: "💰",
+  Environmental: "🌿",
+  Other: "📋",
+};
+
+// Status config for badges (9-status system)
+export const STATUS_CONFIG = {
+  0: {
+    label: "Submitted",
+    color: "bg-yellow-100 text-yellow-800",
+    dot: "bg-yellow-400",
+  },
+  1: {
+    label: "In Review",
+    color: "bg-blue-100 text-blue-800",
+    dot: "bg-blue-400",
+  },
+  2: {
+    label: "Escalated — Ward",
+    color: "bg-orange-100 text-orange-800",
+    dot: "bg-orange-400",
+  },
+  3: {
+    label: "Escalated — Municipality",
+    color: "bg-orange-200 text-orange-900",
+    dot: "bg-orange-500",
+  },
+  4: {
+    label: "Escalated — Province",
+    color: "bg-red-100 text-red-800",
+    dot: "bg-red-400",
+  },
+  5: {
+    label: "Escalated — Federal",
+    color: "bg-red-200 text-red-900",
+    dot: "bg-red-500",
+  },
+  6: {
+    label: "Gov Resolved",
+    color: "bg-cyan-100 text-cyan-800",
+    dot: "bg-cyan-400",
+  },
+  7: {
+    label: "Confirmed",
+    color: "bg-green-100 text-green-800",
+    dot: "bg-green-400",
+  },
+  8: {
+    label: "Disputed",
+    color: "bg-pink-100 text-pink-800",
+    dot: "bg-pink-400",
+  },
+};
+
+// Nepal locations for autocomplete
+export const NEPAL_LOCATIONS = [
+  "Kathmandu Metropolitan City",
+  "Lalitpur Metropolitan City",
+  "Bhaktapur Municipality",
+  "Pokhara Metropolitan City",
+  "Biratnagar Metropolitan City",
+  "Birgunj Metropolitan City",
+  "Dharan Sub-Metropolitan City",
+  "Butwal Sub-Metropolitan City",
+  "Hetauda Sub-Metropolitan City",
+  "Janakpur Sub-Metropolitan City",
+  "Nepalgunj Sub-Metropolitan City",
+  "Itahari Sub-Metropolitan City",
+  "Bharatpur Metropolitan City",
+  "Siddharthanagar Municipality",
+  "Tulsipur Sub-Metropolitan City",
+];

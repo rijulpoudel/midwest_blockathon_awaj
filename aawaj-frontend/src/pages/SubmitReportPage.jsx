@@ -1,9 +1,12 @@
 import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
 import { submitFullReport } from "../utils/submitReport";
 import { getIPFSUrl } from "../utils/pinata";
-import { REPORT_CATEGORIES } from "../constants";
-import LoadingSpinner from "../components/LoadingSpinner";
+import { REPORT_CATEGORIES, NEPAL_LOCATIONS } from "../constants";
+import PageShell from "../components/PageShell";
+import ImageUploadZone from "../components/ImageUploadZone";
+import LoadingOverlay from "../components/LoadingOverlay";
+import GlassCard from "../components/GlassCard";
+import PillButton from "../components/PillButton";
 
 export default function SubmitReportPage() {
   const [step, setStep] = useState(1);
@@ -19,22 +22,11 @@ export default function SubmitReportPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [error, setError] = useState("");
-  const fileInputRef = useRef(null);
 
-  function handleFileChange(e) {
-    const selected = e.target.files[0];
-    if (!selected) return;
-    setImageFile(selected);
-    setPreview(URL.createObjectURL(selected));
-  }
-
-  function handleDrop(e) {
-    e.preventDefault();
-    const dropped = e.dataTransfer.files[0];
-    if (dropped && dropped.type.startsWith("image/")) {
-      setImageFile(dropped);
-      setPreview(URL.createObjectURL(dropped));
-    }
+  function handleFileSelect(file) {
+    setImageFile(file);
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(URL.createObjectURL(file));
   }
 
   async function handleSubmit() {
@@ -62,245 +54,277 @@ export default function SubmitReportPage() {
     }
   }
 
+  function resetForm() {
+    setStep(1);
+    setReportId(null);
+    setImageFile(null);
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(null);
+    setMetadataCID(null);
+    setTxHash(null);
+    setConfirmationCode(null);
+    setLocation("");
+    setDescription("");
+    setError("");
+  }
+
   // ─── STEP 3: Success Screen ───────────────────────────────────
   if (step === 3 && reportId !== null) {
     return (
-      <div className="max-w-lg mx-auto mt-16 text-center px-4">
-        <div className="text-6xl mb-4">✅</div>
-        <h2 className="text-3xl font-bold text-white mb-2">
-          Report Submitted!
-        </h2>
-        <p className="text-body mb-2">
-          Your evidence is now permanent and tamper-proof.
-        </p>
-        <p className="text-muted text-sm mb-6">Your Report ID:</p>
-        <p
-          className="text-5xl font-mono font-bold mb-6"
-          style={{ color: "#00c896" }}
-        >
-          #{reportId}
-        </p>
+      <PageShell overlay="bg-black/60">
+        <style>{`@keyframes scaleIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}`}</style>
 
-        <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-4 mb-6">
-          <p className="text-yellow-400 font-semibold text-sm">
-            ⚠️ SAVE THIS NUMBER — you need it to track your report
-          </p>
+        <div className="pt-12" style={{ animation: "scaleIn 0.5s ease-out" }}>
+          <div className="text-7xl mb-6 text-center">✅</div>
         </div>
 
-        {/* Confirmation Code */}
-        <div className="card border-2 border-accent-blue mb-6">
-          <h4 className="text-sm font-semibold text-accent-blue mb-2">
-            🔐 Your Secret Confirmation Code
-          </h4>
-          <p
-            className="text-3xl font-mono font-bold tracking-widest mb-3"
-            style={{ color: "#00c896" }}
-          >
-            {confirmationCode}
-          </p>
-          <p className="text-xs text-muted mb-3">
-            This is your <strong className="text-white">identity proof</strong>.
-            When the government marks your issue as resolved, you’ll need this
-            code to confirm or dispute the resolution. Without it, anyone could
-            pretend to be you.
-          </p>
+        <h2
+          className="text-3xl font-bold text-white text-center mb-3"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
+          Your Voice is Now Permanent
+        </h2>
+        <p
+          className="text-sm text-center max-w-md mb-10"
+          style={{ color: "rgba(255,255,255,0.55)" }}
+        >
+          Your report has been written to the blockchain and stored permanently
+          on IPFS. No one can delete or deny it.
+        </p>
+
+        <div className="w-full max-w-lg space-y-4 mb-6">
+          {/* Report ID */}
+          <GlassCard label="YOUR REPORT ID — SAVE THIS">
+            <p className="text-white font-mono text-3xl font-bold">
+              #{reportId}
+            </p>
+          </GlassCard>
+
+          {/* Confirmation Code */}
+          <GlassCard label="🔐 YOUR SECRET CONFIRMATION CODE — SAVE THIS">
+            <p
+              className="text-3xl font-mono font-bold tracking-widest mb-2"
+              style={{ color: "#00c896" }}
+            >
+              {confirmationCode}
+            </p>
+            <p
+              className="text-xs mb-3"
+              style={{ color: "rgba(255,255,255,0.5)" }}
+            >
+              This is your{" "}
+              <strong className="text-white">identity proof</strong>. You'll
+              need this code to confirm or dispute resolution. Without it,
+              anyone could pretend to be you.
+            </p>
+            <button
+              onClick={() => navigator.clipboard.writeText(confirmationCode)}
+              className="text-sm font-medium hover:underline"
+              style={{ color: "#00c896" }}
+            >
+              📋 Copy to clipboard
+            </button>
+          </GlassCard>
+
+          {/* Verification Links */}
+          <GlassCard label="VERIFICATION LINKS">
+            <div className="space-y-2">
+              {metadataCID && (
+                <a
+                  href={getIPFSUrl(metadataCID)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-sm hover:underline"
+                  style={{ color: "#6b8cae" }}
+                >
+                  📦 View Metadata on IPFS ↗
+                </a>
+              )}
+              {txHash && (
+                <a
+                  href={`https://amoy.polygonscan.com/tx/${txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-sm hover:underline"
+                  style={{ color: "#6b8cae" }}
+                >
+                  ⛓️ View Transaction on Polygonscan ↗
+                </a>
+              )}
+            </div>
+          </GlassCard>
+        </div>
+
+        <div className="flex flex-col items-center gap-4">
+          <PillButton to="/track">Track My Report →</PillButton>
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(confirmationCode);
-            }}
-            className="text-sm text-accent-blue hover:underline"
+            onClick={resetForm}
+            className="text-sm hover:underline"
+            style={{ color: "rgba(255,255,255,0.4)" }}
           >
-            📋 Copy to clipboard
+            Submit Another Report
           </button>
         </div>
-
-        <div className="flex flex-col gap-3 mb-8">
-          <Link
-            to={`/track`}
-            className="inline-block text-white font-semibold py-3 px-6 rounded-xl transition shadow-lg"
-            style={{ backgroundColor: "#00c896" }}
-          >
-            Track My Report
-          </Link>
-        </div>
-
-        <div className="card text-left space-y-3">
-          <h4 className="font-semibold text-white text-sm">
-            Verification Links
-          </h4>
-          {metadataCID && (
-            <a
-              href={getIPFSUrl(metadataCID)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-accent-blue hover:underline text-sm"
-            >
-              📦 View Metadata on IPFS →
-            </a>
-          )}
-          {txHash && (
-            <a
-              href={`https://amoy.polygonscan.com/tx/${txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-accent-blue hover:underline text-sm"
-            >
-              ⛓️ View Transaction on Polygonscan →
-            </a>
-          )}
-        </div>
-
-        <p className="text-xs text-muted mt-10">
-          Powered by Pinata IPFS + Polygon Blockchain
-        </p>
-      </div>
+      </PageShell>
     );
   }
 
-  // ─── LOADING OVERLAY ──────────────────────────────────────────
-  const loadingOverlay = isLoading && (
-    <div className="fixed inset-0 z-50 bg-black/50 flex flex-col items-center justify-center">
-      <div className="card p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
-        <LoadingSpinner />
-        <p className="text-body font-medium text-center">{loadingMessage}</p>
-      </div>
-    </div>
-  );
+  // ─── STEP 1: Upload Photo ─────────────────────────────────────
+  if (step === 1) {
+    return (
+      <PageShell>
+        <LoadingOverlay show={isLoading} message={loadingMessage} />
 
+        <h1
+          className="mt-12 mb-8 text-center"
+          style={{
+            fontFamily: "'Inter', Helvetica",
+            fontSize: "40px",
+            fontWeight: "600",
+            background: "linear-gradient(to bottom, #A0BAD5, #FFFFFF)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          SUBMIT YOUR REPORT
+        </h1>
+
+        <div className="w-full max-w-3xl">
+          <ImageUploadZone onFileSelect={handleFileSelect} preview={preview} />
+
+          {error && (
+            <p className="text-sm text-red-400 mt-4 text-center">{error}</p>
+          )}
+
+          <div className="flex justify-center mt-8">
+            <PillButton
+              onClick={() => imageFile && setStep(2)}
+              disabled={!imageFile}
+            >
+              Next — Add Details →
+            </PillButton>
+          </div>
+        </div>
+
+        <p
+          className="text-xs mt-12"
+          style={{ color: "rgba(255,255,255,0.25)" }}
+        >
+          Powered by Pinata IPFS + Polygon Blockchain
+        </p>
+      </PageShell>
+    );
+  }
+
+  // ─── STEP 2: Report Details ───────────────────────────────────
   return (
-    <div className="max-w-xl mx-auto mt-10 px-4">
-      {loadingOverlay}
+    <PageShell>
+      <LoadingOverlay show={isLoading} message={loadingMessage} />
 
-      <h1 className="text-3xl font-bold text-white mb-2">Submit a Report</h1>
-      <p className="text-body mb-6 text-sm">Step {step} of 2</p>
+      <h1
+        className="mt-4 mb-8 text-center"
+        style={{
+          fontFamily: "'Inter', Helvetica",
+          fontSize: "40px",
+          fontWeight: "600",
+          background: "linear-gradient(to bottom, #A0BAD5, #FFFFFF)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        SUBMIT YOUR REPORT
+      </h1>
 
-      {/* Error banner */}
-      {error && (
-        <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4 mb-6 flex items-start justify-between">
-          <p className="text-red-400 text-sm">{error}</p>
-          <button
-            onClick={() => setError("")}
-            className="text-red-500 hover:text-red-300 ml-4 text-lg leading-none"
-          >
-            ✕
-          </button>
+      <div className="w-full max-w-3xl space-y-5">
+        <div>
+          <label className="block text-sm mb-1.5" style={fieldLabelStyle}>
+            Location
+          </label>
+          <input
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            list="nepal-locations"
+            placeholder="District / Ward (e.g. Lalitpur Ward 5)"
+            className="w-full px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
+            style={darkFieldStyle}
+          />
+          <datalist id="nepal-locations">
+            {NEPAL_LOCATIONS.map((loc) => (
+              <option key={loc} value={loc} />
+            ))}
+          </datalist>
         </div>
-      )}
 
-      {/* ─── STEP 1: Photo Upload ─────────────────────────────── */}
-      {step === 1 && (
-        <div className="space-y-5">
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            className="border-2 border-dashed border-surface-border rounded-xl p-10 text-center cursor-pointer hover:border-accent-blue/30 transition"
+        <div>
+          <label className="block text-sm mb-1.5" style={fieldLabelStyle}>
+            Category
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none"
+            style={darkFieldStyle}
           >
-            {preview ? (
-              <div>
-                <img
-                  src={preview}
-                  alt="Preview"
-                  className="mx-auto rounded-lg max-h-64 object-cover mb-3"
-                />
-                <p className="text-sm text-muted">{imageFile?.name}</p>
-              </div>
-            ) : (
-              <div>
-                <div className="text-4xl mb-2">📸</div>
-                <p className="text-body font-medium">
-                  Click to select or drag & drop a photo
-                </p>
-                <p className="text-muted text-sm mt-1">
-                  Accepts image files only
-                </p>
-              </div>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </div>
+            {REPORT_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat} style={{ background: "#141b27" }}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          <button
-            onClick={() => setStep(2)}
-            disabled={!imageFile}
-            className="w-full py-3 rounded-xl font-semibold text-lg text-white transition shadow-lg disabled:opacity-40"
-            style={{ backgroundColor: "#00c896" }}
+        <div>
+          <label className="block text-sm mb-1.5" style={fieldLabelStyle}>
+            Description
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe the problem in detail — what happened, when, how it affects people..."
+            rows={4}
+            className="w-full px-4 py-3 text-sm text-white resize-none focus:outline-none focus:ring-2 focus:ring-white/20 placeholder:text-white/30"
+            style={darkFieldStyle}
+          />
+        </div>
+
+        {error && (
+          <p className="text-sm" style={{ color: "rgba(239,68,68,1)" }}>
+            {error}
+          </p>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+          <PillButton
+            variant="outline"
+            onClick={() => setStep(1)}
+            className="px-10"
           >
-            Next →
-          </button>
+            ← Back
+          </PillButton>
+          <PillButton onClick={handleSubmit} disabled={isLoading || !location}>
+            Submit Your Report
+          </PillButton>
         </div>
-      )}
+      </div>
 
-      {/* ─── STEP 2: Report Details ───────────────────────────── */}
-      {step === 2 && (
-        <div className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-body mb-1">
-              Location
-            </label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g. Lalitpur Ward 5, near Sahid Gate"
-              required
-              className="w-full border rounded-lg px-4 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-body mb-1">
-              Category
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full border rounded-lg px-4 py-2 text-sm"
-            >
-              {REPORT_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-body mb-1">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the problem in detail — what happened, when, how it affects people..."
-              rows={4}
-              className="w-full border rounded-lg px-4 py-2 text-sm resize-none"
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setStep(1)}
-              className="flex-1 py-3 rounded-xl font-semibold btn-secondary"
-            >
-              ← Back
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading || !location}
-              className="flex-1 py-3 rounded-xl font-semibold text-lg text-white transition shadow-lg disabled:opacity-40"
-              style={{ backgroundColor: "#00c896" }}
-            >
-              Submit Report
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      <p className="text-xs mt-12" style={{ color: "rgba(255,255,255,0.25)" }}>
+        Powered by Pinata IPFS + Polygon Blockchain
+      </p>
+    </PageShell>
   );
 }
+
+const darkFieldStyle = {
+  background: "rgba(20,27,39,0.7)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: "12px",
+  fontFamily: "'Inter', sans-serif",
+};
+
+const fieldLabelStyle = {
+  color: "rgba(255,255,255,0.55)",
+  fontFamily: "'Inter', sans-serif",
+};

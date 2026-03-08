@@ -1,75 +1,107 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif:wght@900&family=Inter:wght@400;500&family=Playfair+Display:wght@700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── Hard reset ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+:root {
+  --echo-green: #00c896;
+  --echo-green-dark: #00a67d;
+  --echo-bg: #0a0e1a;
+  --echo-surface: #131929;
+  --echo-border: #1e2640;
+  --echo-text: #e8eaf0;
+  --echo-muted: #6b7280;
+}
+
 body {
-  background-color: #0a0b0f;
-  color: rgba(255, 255, 255, 0.85);
+  background-color: #f8fafc;
+  font-family: "Inter", system-ui, sans-serif;
+  color: #1f2937;
 }
 
-.card {
-  background: #1e2736;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 1rem;
-  padding: 1.5rem;
+/* ── Card styles ── */
+.echo-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-.card-glass {
-  background: rgba(30, 39, 54, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 1rem;
-  padding: 1.5rem;
-}
-
-.btn-primary {
-  background-color: #c0193a;
+/* ── Buttons ── */
+.echo-btn-primary {
+  background: #00c896;
   color: white;
   font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  transition: all 0.2s;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
 }
-.btn-primary:hover {
-  background-color: #d41e42;
+.echo-btn-primary:hover {
+  background: #00a67d;
+}
+.echo-btn-primary:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
 }
 
-.btn-secondary {
-  background-color: #1e2736;
-  color: rgba(255, 255, 255, 0.85);
+.echo-btn-secondary {
+  background: transparent;
+  color: #374151;
+  font-weight: 500;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+}
+
+.echo-btn-danger {
+  background: #dc2626;
+  color: white;
   font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.2s;
-}
-.btn-secondary:hover {
-  background-color: #2a3548;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
 }
 
-.text-muted {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.text-body {
-  color: rgba(255, 255, 255, 0.55);
-}
-
+/* ── Form inputs (light theme) ── */
 input,
 select,
 textarea {
-  background-color: #151922;
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.85);
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #1f2937;
 }
 input::placeholder,
 textarea::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: #9ca3af;
 }
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #6b8cae;
+  border-color: #00c896;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(107, 140, 174, 0.3);
+  box-shadow: 0 0 0 2px rgba(0, 200, 150, 0.2);
 }

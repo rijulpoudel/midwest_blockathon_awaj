@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import SubmitReportPage from "./pages/SubmitReportPage";
@@ -8,14 +8,15 @@ import GovDashboardPage from "./pages/GovDashboardPage";
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-surface-bg">
+      <div>
         <Navbar />
-        <main className="pb-12">
+        <main>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/submit" element={<SubmitReportPage />} />
             <Route path="/track" element={<TrackReportPage />} />
             <Route path="/gov" element={<GovDashboardPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
       </div>

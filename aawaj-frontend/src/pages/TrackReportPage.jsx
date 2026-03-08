@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import useContract from "../hooks/useContract";
-import ReportCard from "../components/ReportCard";
 import EscalationTimeline from "../components/EscalationTimeline";
 import LoadingSpinner from "../components/LoadingSpinner";
+import StatusBadge from "../components/StatusBadge";
 import { getIPFSUrl } from "../utils/pinata";
 import useIPFSImage from "../hooks/useIPFSImage";
 import { verifyConfirmationCode } from "../utils/submitReport";
@@ -11,65 +11,17 @@ import {
   confirmResolutionViaRelayer,
   disputeResolutionViaRelayer,
 } from "../utils/relayer";
+import { CATEGORY_ICONS } from "../constants";
+import PageShell from "../components/PageShell";
+import trackBg from "../assets/TrackReport.png";
 
-// ── Evidence Section ─────────────────────────────────────────
-function EvidenceSection({ report }) {
-  const imageUrl = useIPFSImage(report.ipfsHash);
-
-  return (
-    <div className="card">
-      <h3 className="font-semibold text-white mb-3">Evidence</h3>
-      {imageUrl && (
-        <img
-          src={imageUrl}
-          alt="Report evidence"
-          className="w-full rounded-lg mb-4"
-          onError={(e) => {
-            e.target.style.display = "none";
-          }}
-        />
-      )}
-      <div className="space-y-3">
-        <div className="flex items-start gap-2">
-          <span className="text-accent-blue text-sm font-medium whitespace-nowrap">
-            IPFS CID:
-          </span>
-          <code className="text-xs text-body break-all bg-surface-bg rounded px-2 py-1">
-            {report.ipfsHash}
-          </code>
-        </div>
-        <p className="text-xs text-muted">
-          This content hash is a cryptographic fingerprint. If anyone changes
-          the evidence, the hash changes — proving tampering.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <a
-            href={getIPFSUrl(report.ipfsHash)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-accent-blue hover:underline"
-          >
-            📦 View on IPFS →
-          </a>
-          <a
-            href={`https://amoy.polygonscan.com/address/${import.meta.env.VITE_CONTRACT_ADDRESS}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-accent-blue hover:underline"
-          >
-            ⛓️ Verify on Polygonscan →
-          </a>
-        </div>
-        <div className="flex items-center gap-2 mt-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-accent-green animate-pulse" />
-          <span className="text-xs text-accent-green font-medium">
-            Stored on IPFS via Pinata — tamper-proof & permanent
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
+// ── Glass container style ────────────────────────────────────
+const glassStyle = {
+  background: "rgba(180,195,210,0.2)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(255,255,255,0.25)",
+};
 
 // ── Citizen Confirm / Dispute Section ────────────────────────
 function CitizenResolutionSection({ report, onResolved }) {
@@ -115,7 +67,6 @@ function CitizenResolutionSection({ report, onResolved }) {
     setVerifyError("");
 
     if (!confirmationHash) {
-      // Legacy report without a hash — allow access (backwards compat)
       setVerified(true);
       setVerifying(false);
       return;
@@ -166,19 +117,22 @@ function CitizenResolutionSection({ report, onResolved }) {
 
   if (hashLoading) {
     return (
-      <div className="card border border-yellow-700 text-center py-6">
+      <div className="rounded-3xl p-6 text-center" style={glassStyle}>
         <LoadingSpinner />
-        <p className="text-sm text-muted mt-2">Loading verification data…</p>
+        <p className="text-sm text-white/40 mt-2">Loading verification data…</p>
       </div>
     );
   }
 
   return (
-    <div className="card border border-yellow-700">
+    <div
+      className="rounded-3xl p-6"
+      style={{ ...glassStyle, border: "2px solid rgba(234,179,8,0.5)" }}
+    >
       <h3 className="font-semibold text-yellow-300 mb-2">
         ⚖️ Your Confirmation Required
       </h3>
-      <p className="text-sm text-muted mb-4">
+      <p className="text-sm text-white/60 mb-4">
         The government has marked this issue as resolved. As the person who
         reported it, <strong className="text-white">you</strong> decide if it's
         actually fixed. This is recorded on the blockchain and cannot be faked.
@@ -187,11 +141,10 @@ function CitizenResolutionSection({ report, onResolved }) {
       {/* Step 1: Enter confirmation code */}
       {!verified && !result && (
         <div>
-          <p className="text-sm text-body mb-3">
+          <p className="text-sm text-white/70 mb-3">
             🔐 Enter the{" "}
             <strong className="text-white">secret confirmation code</strong> you
-            received when you submitted this report. This proves you are the
-            original reporter.
+            received when you submitted this report.
           </p>
           <form onSubmit={handleVerifyCode} className="flex gap-3">
             <input
@@ -199,12 +152,17 @@ function CitizenResolutionSection({ report, onResolved }) {
               value={codeInput}
               onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
               placeholder="e.g. AAWAJ-7X9K2M3P"
-              className="flex-1 bg-surface-card border border-gray-600 text-white rounded-lg px-4 py-2 text-sm font-mono placeholder-gray-500 tracking-wider"
+              className="flex-1 px-4 py-2.5 text-sm text-white font-mono tracking-wider placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-white/20"
+              style={{
+                background: "rgba(20,27,39,0.7)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "12px",
+              }}
             />
             <button
               type="submit"
               disabled={verifying || !codeInput.trim()}
-              className="btn-primary px-5 py-2 disabled:opacity-50"
+              className="echo-btn-primary px-5 py-2.5 disabled:opacity-50"
             >
               {verifying ? "Verifying…" : "Verify"}
             </button>
@@ -215,11 +173,17 @@ function CitizenResolutionSection({ report, onResolved }) {
         </div>
       )}
 
-      {/* Step 2: Confirm or Dispute (only after code verified) */}
+      {/* Step 2: Confirm or Dispute */}
       {verified && !result && (
         <div>
-          <div className="bg-green-900/20 border border-green-700/50 rounded-lg p-3 mb-4">
-            <p className="text-green-400 text-sm font-medium">
+          <div
+            className="rounded-xl p-3 mb-4"
+            style={{
+              background: "rgba(34,197,94,0.15)",
+              border: "1px solid rgba(34,197,94,0.3)",
+            }}
+          >
+            <p className="text-green-300 text-sm font-medium">
               ✅ Identity verified — you are the original reporter.
             </p>
           </div>
@@ -249,17 +213,18 @@ function CitizenResolutionSection({ report, onResolved }) {
       {/* Step 3: Result */}
       {result && (
         <div
-          className={`rounded-lg p-4 text-center ${
-            action === "confirm"
-              ? "bg-green-900/30 border border-green-700"
-              : "bg-pink-900/30 border border-pink-700"
-          }`}
+          className="rounded-xl p-4 text-center"
+          style={{
+            background:
+              action === "confirm"
+                ? "rgba(34,197,94,0.15)"
+                : "rgba(236,72,153,0.15)",
+            border: `1px solid ${action === "confirm" ? "rgba(34,197,94,0.3)" : "rgba(236,72,153,0.3)"}`,
+          }}
         >
           <p className="text-2xl mb-1">{action === "confirm" ? "🎉" : "⚠️"}</p>
           <p
-            className={`font-medium ${
-              action === "confirm" ? "text-green-300" : "text-pink-300"
-            }`}
+            className={`font-medium ${action === "confirm" ? "text-green-300" : "text-pink-300"}`}
           >
             {result}
           </p>
@@ -293,13 +258,12 @@ export default function TrackReportPage() {
     }
   }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function handleSearch(e) {
-    e.preventDefault();
+  async function handleSearch(id) {
     setNotFound(false);
     setReport(null);
-    const id = parseInt(reportId, 10);
-    if (isNaN(id) || id <= 0) return;
-    const result = await fetchReport(id);
+    const parsed = parseInt(id || reportId, 10);
+    if (isNaN(parsed) || parsed <= 0) return;
+    const result = await fetchReport(parsed);
     if (result) {
       setReport(result);
     } else {
@@ -311,50 +275,160 @@ export default function TrackReportPage() {
     setReport((r) => (r ? { ...r, status: newStatus } : r));
   }
 
+  const evidenceImageUrl = useIPFSImage(report?.ipfsHash);
+
   return (
-    <div className="max-w-xl mx-auto mt-10 px-4">
-      <h1 className="text-3xl font-bold text-white mb-6">Track a Report</h1>
+    <PageShell bg={trackBg} overlay="bg-black/0">
+      <h1
+        className="mt-0 mb-4 text-center"
+        style={{
+          fontFamily: "'Inter', Helvetica",
+          fontSize: "40px",
+          fontWeight: "600",
+          background: "linear-gradient(to bottom, #A0BAD5, #FFFFFF)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        TRACK YOUR REPORT
+      </h1>
 
-      <form onSubmit={handleSearch} className="flex gap-3 mb-8">
-        <input
-          type="number"
-          min="1"
-          value={reportId}
-          onChange={(e) => setReportId(e.target.value)}
-          placeholder="Enter Report ID"
-          required
-          className="flex-1 bg-surface-card border border-gray-600 text-white rounded-lg px-4 py-2 text-sm placeholder-gray-500"
-        />
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="btn-primary px-6 py-2 disabled:opacity-50"
-        >
-          Search
-        </button>
-      </form>
+      {/* Glass Search Bar */}
+      <div
+        className="w-full max-w-5xl rounded-3xl p-10 flex flex-col items-center gap-4 justify-center"
+        style={glassStyle}
+      >
+        <h2 className="text-2xl font-bold text-black tracking-widest text-center">
+          SEARCH WITH YOUR ID
+        </h2>
+        <p className="text-sm text-gray-600 text-center">
+          Enter your Report ID to track it
+        </p>
+        <div className="flex gap-3 w-full max-w-md">
+          <input
+            type="number"
+            min="1"
+            value={reportId}
+            onChange={(e) => setReportId(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            placeholder="Enter Report ID"
+            className="flex-1 bg-white text-gray-800 rounded-xl px-4 py-3 text-base focus:outline-none placeholder-gray-400"
+          />
+          <button
+            onClick={() => handleSearch()}
+            disabled={isLoading}
+            className="echo-btn-primary px-6 py-3 rounded-xl disabled:opacity-50"
+          >
+            Search
+          </button>
+        </div>
+      </div>
 
-      {isLoading && <LoadingSpinner />}
+      {isLoading && (
+        <div className="mt-8">
+          <LoadingSpinner message="Fetching report from blockchain..." />
+        </div>
+      )}
 
-      {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+      {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
 
       {notFound && (
-        <p className="text-muted text-center py-8">
+        <p className="text-white/60 text-center mt-8">
           No report found with that ID.
         </p>
       )}
 
       {report && (
-        <div className="space-y-6">
-          <ReportCard report={report} />
-          <EvidenceSection report={report} />
+        <div className="w-full max-w-2xl mt-8 space-y-6">
+          {/* Report Details Glass Card */}
+          <div className="rounded-3xl p-6" style={glassStyle}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">
+                  {CATEGORY_ICONS[report.category] || "📋"}
+                </span>
+                <div>
+                  <h2 className="text-lg font-bold text-white">
+                    Report #{report.id}
+                  </h2>
+                  <p className="text-sm text-white/60">{report.category}</p>
+                </div>
+              </div>
+              <StatusBadge status={report.status} />
+            </div>
 
-          {/* Escalation & Resolution Timeline */}
-          <div className="card">
+            <div className="space-y-2 text-sm text-white/70">
+              <p>📍 {report.location}</p>
+              <p>
+                Submitted on{" "}
+                {report.timestamp instanceof Date
+                  ? report.timestamp.toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : new Date(report.timestamp * 1000).toLocaleDateString(
+                      "en-US",
+                      { year: "numeric", month: "long", day: "numeric" },
+                    )}
+              </p>
+              <p>
+                Reporter{" "}
+                <span className="font-mono text-xs">
+                  {report.reporter?.slice(0, 6)}...
+                  {report.reporter?.slice(-4)}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {/* Escalation Timeline Glass Card */}
+          <div className="rounded-3xl p-6" style={glassStyle}>
             <h3 className="font-semibold text-white mb-3">
               Escalation & Resolution Timeline
             </h3>
             <EscalationTimeline currentStatus={report.status} />
+          </div>
+
+          {/* Evidence Glass Card */}
+          <div className="rounded-3xl p-6" style={glassStyle}>
+            <h3 className="font-semibold text-white mb-3">Evidence</h3>
+
+            {evidenceImageUrl && (
+              <img
+                src={evidenceImageUrl}
+                alt="Report evidence"
+                className="w-full rounded-xl mb-3"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
+              />
+            )}
+
+            <p className="text-xs text-white/40 mb-2">
+              Evidence stored on IPFS via Pinata — content-addressed and
+              tamper-proof
+            </p>
+
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={getIPFSUrl(report.ipfsHash)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-[#00c896] hover:underline"
+              >
+                📦 View on IPFS →
+              </a>
+              <a
+                href={`https://amoy.polygonscan.com/address/${import.meta.env.VITE_CONTRACT_ADDRESS}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-[#00c896] hover:underline"
+              >
+                ⛓️ Verify on Polygonscan →
+              </a>
+            </div>
           </div>
 
           {/* Citizen confirm/dispute — only when Gov says "Resolved" (status 6) */}
@@ -367,12 +441,19 @@ export default function TrackReportPage() {
 
           {/* Final state banners */}
           {report.status === 7 && (
-            <div className="card border border-green-700 bg-green-900/20 text-center py-6">
+            <div
+              className="rounded-3xl p-6 text-center"
+              style={{
+                ...glassStyle,
+                border: "2px solid rgba(34,197,94,0.5)",
+                background: "rgba(34,197,94,0.15)",
+              }}
+            >
               <p className="text-3xl mb-2">🎉</p>
               <p className="text-green-300 font-semibold text-lg">
                 Citizen Confirmed — Issue Resolved
               </p>
-              <p className="text-sm text-muted mt-1">
+              <p className="text-sm text-white/50 mt-1">
                 The original reporter verified this issue was actually fixed.
                 This confirmation is permanent on the blockchain.
               </p>
@@ -380,12 +461,19 @@ export default function TrackReportPage() {
           )}
 
           {report.status === 8 && (
-            <div className="card border border-pink-700 bg-pink-900/20 text-center py-6">
+            <div
+              className="rounded-3xl p-6 text-center"
+              style={{
+                ...glassStyle,
+                border: "2px solid rgba(236,72,153,0.5)",
+                background: "rgba(236,72,153,0.15)",
+              }}
+            >
               <p className="text-3xl mb-2">⚠️</p>
               <p className="text-pink-300 font-semibold text-lg">
                 Citizen Disputed — Not Resolved
               </p>
-              <p className="text-sm text-muted mt-1">
+              <p className="text-sm text-white/50 mt-1">
                 The original reporter says this issue is NOT fixed. The
                 government's "resolved" claim has been publicly challenged
                 on-chain.
@@ -394,6 +482,6 @@ export default function TrackReportPage() {
           )}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
