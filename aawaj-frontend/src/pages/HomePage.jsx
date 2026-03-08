@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import useContract from "../hooks/useContract";
-import ActivityFeedCard from "../components/ActivityFeedCard";
 import { getReadOnlyContract } from "../utils/contract";
 import bgImage from "../assets/home_asset/home-page.png";
 import mountainImage from "../assets/home_asset/mountain.png";
@@ -250,42 +249,67 @@ export default function HomePage({ account, onConnect, navbarRef }) {
         <img src={mountainImage} alt="" style={{ width: "100%", display: "block" }} />
       </div>
 
-      {/* z:4 — YAK — left side, near stats bar */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: yakTop,
-          zIndex: 4,
-          pointerEvents: "none",
-        }}
-      >
-        <img
-          src={yakImage}
-          alt="Yak"
-          style={{ width: YAK_W, height: YAK_H, display: "block", objectFit: "contain" }}
-        />
+      {/* z:4 — YAK — left side */}
+      <div style={{ position: "absolute", left: 0, top: yakTop, zIndex: 4, pointerEvents: "none" }}>
+        <img src={yakImage} alt="Yak" style={{ width: YAK_W, height: YAK_H, display: "block", objectFit: "contain" }} />
       </div>
 
-      {/* z:4 — FLOWER — right side, near stats bar */}
-      <div
-        style={{
-          position: "absolute",
-          right: 0,
-          top: flowerTop,
-          zIndex: 4,
-          pointerEvents: "none",
-        }}
-      >
-        <img
-          src={flowerImage}
-          alt="Flower"
-          style={{ width: FLOWER_W, height: FLOWER_H, display: "block", objectFit: "contain" }}
-        />
+      {/* z:4 — FLOWER — right side */}
+      <div style={{ position: "absolute", right: 0, top: flowerTop, zIndex: 4, pointerEvents: "none" }}>
+        <img src={flowerImage} alt="Flower" style={{ width: FLOWER_W, height: FLOWER_H, display: "block", objectFit: "contain" }} />
       </div>
 
-      {/* z:3 — PAGE CONTENT */}
-      <div style={{ position: "relative", zIndex: 3, paddingTop: `${mountainHeightPx}px` }}>
+      {/* ── FLOW CONTENT — starts below mountain, each box is a normal div ── */}
+      <div style={{ position: "relative", zIndex: 3, paddingTop: 439 }}>
+
+        {/* GLOSSY BOX */}
+        <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
+          <div
+            style={{
+              width: "min(1100px, 70vw)",
+              borderRadius: 30,
+              padding: "20px 13px 20px 43px",
+              background: "linear-gradient(135deg, rgba(255,255,255,0.53) 0%, rgba(255,255,255,0.38) 100%)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid rgba(255,255,255,0.55)",
+              boxShadow: "0 8px 48px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.6)",
+              display: "flex",
+              flexDirection: "row",
+              gap: 0,
+            }}
+          >
+            {/* Span 1 */}
+            <div style={{ flex: 1, padding: "0 20px" }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 600, color: "#2F3A43", margin: "0 0 10px 0", letterSpacing: "0.01em" }}>
+                Your voice, permanent and loud.
+              </p>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 400, color: "white", margin: 0, lineHeight: 1.7 }}>
+                The people's record permanent, tamper-proof, forever. When officials deny, when reports disappear, when voices go unheard — Awaj writes it all to the blockchain. Permanently.
+              </p>
+            </div>
+
+            {/* Span 2 */}
+            <div style={{ flex: 1, padding: "0 20px" }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 600, color: "#2F3A43", margin: "0 0 10px 0", letterSpacing: "0.01em" }}>
+                Speak. Report. Be seen.
+              </p>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 400, color: "white", margin: 0, lineHeight: 1.7 }}>
+                Every complaint deserves a witness. Corruption thrives in silence. Awaj makes every civic report public, verified, and impossible to erase — powered by your community and the blockchain.
+              </p>
+            </div>
+
+            {/* Span 3 */}
+            <div style={{ flex: 1, padding: "0 20px" }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 600, color: "#2F3A43", margin: "0 0 10px 0", letterSpacing: "0.01em" }}>
+                Because someone has to listen.
+              </p>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 400, color: "white", margin: 0, lineHeight: 1.7 }}>
+                Built for the districts nobody listens to. From Humla to Kathmandu, every citizen deserves to be heard. Submit your report, get it confirmed by your community, and watch it live on-chain — where no one can touch it.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* STATS BAR */}
         <section style={{ padding: "32px 16px", background: "rgba(19,25,41,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
@@ -309,35 +333,6 @@ export default function HomePage({ account, onConnect, navbarRef }) {
           </div>
         </section>
 
-        {/* LIVE FEED */}
-        <section style={{ maxWidth: 768, margin: "0 auto", padding: "48px 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444", display: "inline-block", animation: "redpulse 1.5s ease-in-out infinite" }} />
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: "white", margin: 0 }}>Live on Blockchain</h2>
-          </div>
-          <p style={{ fontSize: 14, color: "#9ca3af", marginBottom: 24 }}>Real-time report activity from Polygon Amoy</p>
-          {feedLoading ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="echo-card">
-                  <div style={{ height: 16, background: "#e5e7eb", borderRadius: 4, width: "75%", marginBottom: 12 }} />
-                  <div style={{ height: 12, background: "#e5e7eb", borderRadius: 4, width: "50%", marginBottom: 8 }} />
-                  <div style={{ height: 12, background: "#e5e7eb", borderRadius: 4, width: "33%" }} />
-                </div>
-              ))}
-            </div>
-          ) : feed.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "48px 0", color: "#9ca3af" }}>No reports yet. Be the first to report a problem.</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {feed.map((report) => <ActivityFeedCard key={report.id} report={report} />)}
-            </div>
-          )}
-          {lastUpdated && <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 16, textAlign: "center" }}>Last updated: {lastUpdated.toLocaleTimeString()}</p>}
-        </section>
-
-        <div style={{ height: 100 }} />
-        <NepalNewsSection />
       </div>
 
       <style>{`
