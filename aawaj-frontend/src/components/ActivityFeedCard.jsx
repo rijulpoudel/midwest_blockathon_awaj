@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
 import { CATEGORY_ICONS, STATUS_CONFIG, ESCALATION_LEVELS } from "../constants";
+import useIPFSImage from "../hooks/useIPFSImage";
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -18,6 +19,7 @@ export default function ActivityFeedCard({ report }) {
   const icon = CATEGORY_ICONS[report.category] || "📋";
   const statusConfig = STATUS_CONFIG[report.status] || {};
   const levelName = ESCALATION_LEVELS[report.escalationLevel]?.name || "Ward";
+  const imageUrl = useIPFSImage(report.ipfsHash);
 
   const borderColors = {
     0: "border-l-yellow-400",
@@ -33,6 +35,16 @@ export default function ActivityFeedCard({ report }) {
       onClick={() => navigate(`/track/${report.id}`)}
       className={`echo-card border-l-4 ${borderColors[report.status] || "border-l-gray-300"} cursor-pointer hover:shadow-md transition-shadow`}
     >
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt="Evidence"
+          className="w-full h-36 object-cover rounded-lg mb-3"
+          onError={(e) => {
+            e.target.style.display = "none";
+          }}
+        />
+      )}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
