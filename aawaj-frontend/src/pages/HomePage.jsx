@@ -228,20 +228,15 @@ export default function HomePage({ account, onConnect }) {
   }, []);
 
   return (
-    /*
-      Background: uses HOME PAGE.png (1440x3381px) as the full-page canvas.
-      The page scrolls naturally through the image — no scroll hijacking.
-      Add new sections below NepalNewsSection and they'll sit on the image.
-    */
     <div
       style={{
         backgroundImage: `url(${bgImage})`,
-        backgroundSize: "100% auto",   // stretches width to fit, height scales proportionally
+        backgroundSize: "100% 100%",       // stretches image to fill exactly — no bleed
         backgroundRepeat: "no-repeat",
         backgroundPosition: "top center",
-        minHeight: `calc(100vw * (3381 / 1440))`, // keeps height = image aspect ratio at current viewport width
+        height: `calc(100vw * (3381 / 1440))`, // exact height matching image aspect ratio
         width: "100%",
-        overflow: "hidden",
+        overflowY: "auto",                  // scroll within the image bounds
       }}
     >
 
@@ -348,11 +343,8 @@ export default function HomePage({ account, onConnect }) {
       {/* ── 100px GAP ── */}
       <div style={{ height: 100 }} />
 
-      {/* ── NEPAL NEWS (replaces How It Works) ── */}
+      {/* ── NEPAL NEWS ── */}
       <NepalNewsSection />
-
-      {/* ── ADD NEW SECTIONS BELOW HERE ── */}
-      {/* The background image extends to 3381px so you have plenty of canvas */}
 
     </div>
   );

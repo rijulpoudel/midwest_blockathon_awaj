@@ -16,7 +16,7 @@ export default function Navbar({ account, onConnect }) {
         className="text-2xl font-bold tracking-wide"
         style={{ color: "#00c896" }}
       >
-        ECHO 🇳🇵
+        Aawaj 🇳🇵
       </Link>
 
       <div className="hidden md:flex items-center gap-6 text-sm font-medium">
