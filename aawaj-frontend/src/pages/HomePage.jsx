@@ -4,13 +4,19 @@ import ActivityFeedCard from "../components/ActivityFeedCard";
 import { getReadOnlyContract } from "../utils/contract";
 import bgImage from "../assets/home_asset/home-page.png";
 import mountainImage from "../assets/home_asset/mountain.png";
+import yakImage from "../assets/home_asset/yak.png";
+import flowerImage from "../assets/home_asset/flower.png";
 
-// Mountain is 1440x1051px → height ratio = 1051/1440
 const MOUNTAIN_RATIO = 1051 / 1440;
-// Background image is 1440x3381px → height ratio = 3381/1440
 const BG_RATIO = 3381 / 1440;
 
-// ── Nepal News ───────────────────────────────────────────────────────────────
+// yak: 2156x2464 → display at ~180px wide, keeps ratio
+// flower: 288x663 → display at ~80px wide, keeps ratio
+const YAK_W = 450;
+const YAK_H = Math.round(450 * (2464 / 2156)); // ~514px
+const FLOWER_W = 200;
+const FLOWER_H = Math.round(200 * (663 / 288));  // ~460px
+
 function NepalNewsSection() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -126,53 +132,39 @@ function NewsCard({ article }) {
   );
 }
 
-// ── Main HomePage ────────────────────────────────────────────────────────────
-export default function HomePage({ account, onConnect }) {
+export default function HomePage({ account, onConnect, navbarRef }) {
   const { fetchActivityFeed } = useContract();
   const [feed, setFeed] = useState([]);
   const [totalReports, setTotalReports] = useState(null);
   const [resolvedCount, setResolvedCount] = useState(0);
   const [feedLoading, setFeedLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
-
-  // scrollY from window — works because height:100% is removed from html/body/#root
   const [scrollY, setScrollY] = useState(0);
-
-  const statsRef = useRef(null);
+  const [mountainHeightPx, setMountainHeightPx] = useState(
+    window.innerWidth * MOUNTAIN_RATIO
+  );
   const textRef = useRef(null);
-  const wrapperRef = useRef(null);
 
-  // ── Listen on window.scroll — reliable now that page scrolls naturally ──
   useEffect(() => {
     function onScroll() {
-      setScrollY(window.scrollY);
+      const current = window.scrollY;
+      setScrollY(current);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // ── AAWAJ position:
-  //    - Starts at NAVBAR_HEIGHT + 30px gap below navbar
-  //    - Moves DOWN as user scrolls (follows scroll)
-  //    - Stops 20px above the stats bar
-  function getTextTop() {
-    const NAVBAR_HEIGHT = 70;
-    const GAP = 30;
-    const startTop = NAVBAR_HEIGHT + GAP; // 100px from top of page
-
-    if (!statsRef.current || !textRef.current || !wrapperRef.current) {
-      return startTop + scrollY;
+  useEffect(() => {
+    function onResize() {
+      setMountainHeightPx(window.innerWidth * MOUNTAIN_RATIO);
     }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
-    // offsetTop of stats bar relative to the wrapper div
-    const wrapperRect = wrapperRef.current.getBoundingClientRect();
-    const statsRect = statsRef.current.getBoundingClientRect();
-    const statsAbsoluteTop = statsRect.top + scrollY - wrapperRect.top - scrollY + wrapperRef.current.offsetTop;
-
-    const textHeight = textRef.current.offsetHeight;
-    const maxTop = statsAbsoluteTop - textHeight - 20;
-
-    return Math.min(startTop + scrollY, maxTop);
+  // Hardcoded from console: start=114, stop=209
+  function getTextTop() {
+    return Math.min(114 + scrollY, 209);
   }
 
   async function loadFeed() {
@@ -182,9 +174,7 @@ export default function HomePage({ account, onConnect }) {
       setFeed(reports);
       setResolvedCount(reports.filter((r) => r.status === 4).length);
       setLastUpdated(new Date());
-    } catch {
-      // handled in hook
-    }
+    } catch {}
     setFeedLoading(false);
   }
 
@@ -194,9 +184,7 @@ export default function HomePage({ account, onConnect }) {
         const contract = getReadOnlyContract();
         const count = await contract.getReportCount();
         setTotalReports(Number(count));
-      } catch {
-        setTotalReports(0);
-      }
+      } catch { setTotalReports(0); }
     }
     loadCount();
     loadFeed();
@@ -206,23 +194,26 @@ export default function HomePage({ account, onConnect }) {
 
   const textTop = getTextTop();
 
+  // Yak and flower sit flanking the stats bar
+  // Stats bar starts at mountainHeightPx, vertically center the images on it
+  const statsBarTop = mountainHeightPx;
+  const yakTop = statsBarTop - YAK_H * 0.6;    // yak bottom overlaps into stats bar
+  const flowerTop = statsBarTop - FLOWER_H * 0.5; // flower same
+
   return (
     <div
-      ref={wrapperRef}
       style={{
         position: "relative",
         width: "100%",
-        // Page height = background image aspect ratio
         minHeight: `calc(100vw * ${BG_RATIO})`,
         backgroundImage: `url(${bgImage})`,
         backgroundSize: "100% 100%",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "top center",
-        // NO overflowY: auto — let window handle scrolling
       }}
     >
 
-      {/* ── z:1 — AAWAJ — follows scroll, stops above stats bar ── */}
+      {/* z:1 — AAWAJ */}
       <div
         ref={textRef}
         style={{
@@ -243,7 +234,7 @@ export default function HomePage({ account, onConnect }) {
             fontWeight: 900,
             lineHeight: 1,
             letterSpacing: "-4px",
-            background: "linear-gradient(-16deg, #A0BAD5 0%, #FFFFFF 100%)",
+            background: "linear-gradient(164deg, #A0BAD5 0%, #FFFFFF 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
@@ -254,45 +245,50 @@ export default function HomePage({ account, onConnect }) {
         </span>
       </div>
 
-      {/* ── z:2 — MOUNTAIN PNG — covers AAWAJ as it scrolls up into it ── */}
+      {/* z:2 — MOUNTAIN PNG */}
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 2, pointerEvents: "none", lineHeight: 0 }}>
+        <img src={mountainImage} alt="" style={{ width: "100%", display: "block" }} />
+      </div>
+
+      {/* z:4 — YAK — left side, near stats bar */}
       <div
         style={{
           position: "absolute",
-          top: 0,
           left: 0,
-          right: 0,
-          zIndex: 2,
+          top: yakTop,
+          zIndex: 4,
           pointerEvents: "none",
-          lineHeight: 0,
         }}
       >
         <img
-          src={mountainImage}
-          alt=""
-          style={{ width: "100%", display: "block" }}
+          src={yakImage}
+          alt="Yak"
+          style={{ width: YAK_W, height: YAK_H, display: "block", objectFit: "contain" }}
         />
       </div>
 
-      {/* ── z:3 — PAGE CONTENT — starts right below mountain base ── */}
+      {/* z:4 — FLOWER — right side, near stats bar */}
       <div
         style={{
-          position: "relative",
-          zIndex: 3,
-          // Push content below the mountain: mountain height = vw * MOUNTAIN_RATIO
-          paddingTop: `calc(100vw * ${MOUNTAIN_RATIO})`,
+          position: "absolute",
+          right: 0,
+          top: flowerTop,
+          zIndex: 4,
+          pointerEvents: "none",
         }}
       >
+        <img
+          src={flowerImage}
+          alt="Flower"
+          style={{ width: FLOWER_W, height: FLOWER_H, display: "block", objectFit: "contain" }}
+        />
+      </div>
+
+      {/* z:3 — PAGE CONTENT */}
+      <div style={{ position: "relative", zIndex: 3, paddingTop: `${mountainHeightPx}px` }}>
 
         {/* STATS BAR */}
-        <section
-          ref={statsRef}
-          style={{
-            padding: "32px 16px",
-            background: "rgba(19,25,41,0.75)",
-            backdropFilter: "blur(8px)",
-            WebkitBackdropFilter: "blur(8px)",
-          }}
-        >
+        <section style={{ padding: "32px 16px", background: "rgba(19,25,41,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
           <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, textAlign: "center" }}>
             <div>
               <p style={{ fontSize: 30, fontWeight: 700, color: "#00c896", margin: 0 }}>
@@ -319,9 +315,7 @@ export default function HomePage({ account, onConnect }) {
             <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444", display: "inline-block", animation: "redpulse 1.5s ease-in-out infinite" }} />
             <h2 style={{ fontSize: 20, fontWeight: 700, color: "white", margin: 0 }}>Live on Blockchain</h2>
           </div>
-          <p style={{ fontSize: 14, color: "#9ca3af", marginBottom: 24 }}>
-            Real-time report activity from Polygon Amoy
-          </p>
+          <p style={{ fontSize: 14, color: "#9ca3af", marginBottom: 24 }}>Real-time report activity from Polygon Amoy</p>
           {feedLoading ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {[1, 2, 3].map((i) => (
@@ -333,21 +327,13 @@ export default function HomePage({ account, onConnect }) {
               ))}
             </div>
           ) : feed.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "48px 0", color: "#9ca3af" }}>
-              No reports yet. Be the first to report a problem.
-            </div>
+            <div style={{ textAlign: "center", padding: "48px 0", color: "#9ca3af" }}>No reports yet. Be the first to report a problem.</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {feed.map((report) => (
-                <ActivityFeedCard key={report.id} report={report} />
-              ))}
+              {feed.map((report) => <ActivityFeedCard key={report.id} report={report} />)}
             </div>
           )}
-          {lastUpdated && (
-            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 16, textAlign: "center" }}>
-              Last updated: {lastUpdated.toLocaleTimeString()}
-            </p>
-          )}
+          {lastUpdated && <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 16, textAlign: "center" }}>Last updated: {lastUpdated.toLocaleTimeString()}</p>}
         </section>
 
         <div style={{ height: 100 }} />

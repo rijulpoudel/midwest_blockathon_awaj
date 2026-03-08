@@ -11,27 +11,23 @@ export default function Navbar({ account, onConnect }) {
   const { pathname } = useLocation();
 
   const links = [
-    { to: "/", label: "Home" },
-    { to: "/submit", label: "Submit Report" },
-    { to: "/track", label: "Track Report" },
+    { to: "/", label: "HOME" },
+    { to: "/submit", label: "SUBMIT REPORT" },
+    { to: "/track", label: "TRACK REPORT" },
   ];
 
   return (
     <nav
       style={{
-        position: "absolute",
+        background: "rgba(0,0,0,0.35)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        padding: "12px 24px",
+        position: "fixed",
         top: 0,
         left: 0,
         right: 0,
         zIndex: 100,
-        background: "transparent",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        borderRadius: "4px",
-        paddingTop: "32px",
-        paddingBottom: "6px",
-        paddingLeft: "24px",
-        paddingRight: "24px",
       }}
     >
       <div
@@ -42,12 +38,12 @@ export default function Navbar({ account, onConnect }) {
           gap: "94px",
         }}
       >
-        {/* Logo */}
+        {/* Logo — Playfair Display, white, 20px */}
         <Link
           to="/"
           style={{
             fontFamily: "'Playfair Display', serif",
-            fontSize: "30px",
+            fontSize: "25px",
             fontWeight: 700,
             color: "white",
             textDecoration: "none",
@@ -58,7 +54,7 @@ export default function Navbar({ account, onConnect }) {
           Aawaj
         </Link>
 
-        {/* Nav links */}
+        {/* Nav links — Inter, 20px */}
         {links.map((link) => (
           <Link
             key={link.to}
@@ -66,11 +62,12 @@ export default function Navbar({ account, onConnect }) {
             style={{
               fontFamily: "'Inter', sans-serif",
               fontWeight: 400,
-              fontSize: "15px",
-              lineHeight: 1,
+              fontSize: "13px",
               color: pathname === link.to ? "white" : "#7393B5",
               textDecoration: "none",
-              transition: "color 0.4s ease",
+              border: "none",
+              transition: "color 0.2s ease",
+              lineHeight: 1,
             }}
             onMouseEnter={(e) => {
               if (pathname !== link.to)
@@ -85,30 +82,20 @@ export default function Navbar({ account, onConnect }) {
           </Link>
         ))}
 
-        {/* Search icon — 18px, sits flush with text */}
+        {/* Search icon — 34px */}
         <img
           src={searchIcon}
           alt="Search"
-          style={{
-            width: 27,
-            height: 27,
-            opacity: 0.7,
-            cursor: "pointer",
-            transition: "opacity 0.3s ease",
-            display: "block",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.7)}
+          style={{ width: 34, height: 34, opacity: 0.7, cursor: "pointer", display: "block" }}
         />
 
-        {/* Wallet button */}
+        {/* Wallet button — Inter, 20px, blurred pill */}
         <button
           onClick={onConnect}
           style={{
             fontFamily: "'Inter', sans-serif",
             fontWeight: 400,
-            fontSize: "15px",
-            lineHeight: 1,
+            fontSize: "13px",
             background: "rgba(255,255,255,0.08)",
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
@@ -120,7 +107,8 @@ export default function Navbar({ account, onConnect }) {
             display: "flex",
             alignItems: "center",
             gap: "8px",
-            transition: "background 0.4s ease",
+            transition: "background 0.2s ease",
+            lineHeight: 1,
           }}
           onMouseEnter={(e) =>
             (e.currentTarget.style.background = "rgba(255,255,255,0.14)")

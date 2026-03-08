@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import useWallet from "./hooks/useWallet";
 import Navbar from "./components/Navbar";
@@ -8,40 +9,42 @@ import GovDashboardPage from "./pages/GovDashboardPage";
 
 export default function App() {
   const { account, connectWallet } = useWallet();
+  const navbarRef = useRef(null);
 
   return (
     <BrowserRouter>
       <div>
-        <Navbar account={account} onConnect={connectWallet} />
+        {/* Pass ref so HomePage can read exact navbar height */}
+        <div ref={navbarRef}>
+          <Navbar account={account} onConnect={connectWallet} />
+        </div>
         <main>
           <Routes>
             <Route
               path="/"
-              element={<HomePage account={account} onConnect={connectWallet} />}
+              element={
+                <HomePage
+                  account={account}
+                  onConnect={connectWallet}
+                  navbarRef={navbarRef}
+                />
+              }
             />
             <Route
               path="/submit"
-              element={
-                <SubmitReportPage account={account} onConnect={connectWallet} />
-              }
+              element={<SubmitReportPage account={account} onConnect={connectWallet} />}
             />
             <Route
               path="/track"
-              element={
-                <TrackReportPage account={account} onConnect={connectWallet} />
-              }
+              element={<TrackReportPage account={account} onConnect={connectWallet} />}
             />
             <Route
               path="/track/:reportId"
-              element={
-                <TrackReportPage account={account} onConnect={connectWallet} />
-              }
+              element={<TrackReportPage account={account} onConnect={connectWallet} />}
             />
             <Route
               path="/gov-dashboard"
-              element={
-                <GovDashboardPage account={account} onConnect={connectWallet} />
-              }
+              element={<GovDashboardPage account={account} onConnect={connectWallet} />}
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
