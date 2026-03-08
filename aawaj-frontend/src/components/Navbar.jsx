@@ -19,7 +19,7 @@ export default function Navbar({ account, onConnect }) {
   return (
     <nav
       style={{
-        background: "rgba(0,0,0,0.35)",
+        background: "rgba(5, 12, 49, 0.35)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         padding: "12px 24px",

@@ -9,12 +9,10 @@ import flowerImage from "../assets/home_asset/flower.png";
 const MOUNTAIN_RATIO = 1051 / 1440;
 const BG_RATIO = 3381 / 1440;
 
-// yak: 2156x2464 → display at ~180px wide, keeps ratio
-// flower: 288x663 → display at ~80px wide, keeps ratio
 const YAK_W = 450;
-const YAK_H = Math.round(450 * (2464 / 2156)); // ~514px
+const YAK_H = Math.round(450 * (2464 / 2156));
 const FLOWER_W = 200;
-const FLOWER_H = Math.round(200 * (663 / 288));  // ~460px
+const FLOWER_H = Math.round(200 * (663 / 288));
 
 function NepalNewsSection() {
   const [articles, setArticles] = useState([]);
@@ -145,10 +143,7 @@ export default function HomePage({ account, onConnect, navbarRef }) {
   const textRef = useRef(null);
 
   useEffect(() => {
-    function onScroll() {
-      const current = window.scrollY;
-      setScrollY(current);
-    }
+    function onScroll() { setScrollY(window.scrollY); }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -161,7 +156,6 @@ export default function HomePage({ account, onConnect, navbarRef }) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Hardcoded from console: start=114, stop=209
   function getTextTop() {
     return Math.min(114 + scrollY, 209);
   }
@@ -192,12 +186,9 @@ export default function HomePage({ account, onConnect, navbarRef }) {
   }, []);
 
   const textTop = getTextTop();
-
-  // Yak and flower sit flanking the stats bar
-  // Stats bar starts at mountainHeightPx, vertically center the images on it
   const statsBarTop = mountainHeightPx;
-  const yakTop = statsBarTop - YAK_H * 0.6;    // yak bottom overlaps into stats bar
-  const flowerTop = statsBarTop - FLOWER_H * 0.5; // flower same
+  const yakTop = statsBarTop - YAK_H * 0.6;
+  const flowerTop = statsBarTop - FLOWER_H * 0.5;
 
   return (
     <div
@@ -211,7 +202,6 @@ export default function HomePage({ account, onConnect, navbarRef }) {
         backgroundPosition: "top center",
       }}
     >
-
       {/* z:1 — AAWAJ */}
       <div
         ref={textRef}
@@ -249,62 +239,71 @@ export default function HomePage({ account, onConnect, navbarRef }) {
         <img src={mountainImage} alt="" style={{ width: "100%", display: "block" }} />
       </div>
 
-      {/* z:4 — YAK — left side */}
+      {/* z:4 — YAK */}
       <div style={{ position: "absolute", left: 0, top: yakTop, zIndex: 4, pointerEvents: "none" }}>
         <img src={yakImage} alt="Yak" style={{ width: YAK_W, height: YAK_H, display: "block", objectFit: "contain" }} />
       </div>
 
-      {/* z:4 — FLOWER — right side */}
+      {/* z:4 — FLOWER */}
       <div style={{ position: "absolute", right: 0, top: flowerTop, zIndex: 4, pointerEvents: "none" }}>
         <img src={flowerImage} alt="Flower" style={{ width: FLOWER_W, height: FLOWER_H, display: "block", objectFit: "contain" }} />
       </div>
 
-      {/* ── FLOW CONTENT — starts below mountain, each box is a normal div ── */}
-      <div style={{ position: "relative", zIndex: 3, paddingTop: 439 }}>
+      {/* ── FLOW CONTENT ── */}
+      <div style={{ position: "relative", zIndex: 3, paddingTop: 530 }}>
 
         {/* GLOSSY BOX */}
-        <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
+        {/* 60px from each wall, top padding 20px, title 16px */}
+        <div style={{ padding: "20px 60px 40px 70px" }}>
           <div
             style={{
-              width: "min(1100px, 70vw)",
-              borderRadius: 30,
-              padding: "20px 13px 20px 43px",
-              background: "linear-gradient(135deg, rgba(255,255,255,0.53) 0%, rgba(255,255,255,0.38) 100%)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(255,255,255,0.55)",
-              boxShadow: "0 8px 48px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.6)",
+              width: "100%",
+              borderRadius: 60,
+              padding: "40px 10px",
+              background: "linear-gradient(0deg, rgba(255, 255, 255, 0.13) 0%, rgba(255, 255, 255, 0.55) 100%)",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(40px)",
+              border: "1px solid rgba(0, 0, 0, 0.06)",
               display: "flex",
               flexDirection: "row",
-              gap: 0,
+              gap: 10,
             }}
           >
             {/* Span 1 */}
             <div style={{ flex: 1, padding: "0 20px" }}>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 600, color: "#2F3A43", margin: "0 0 10px 0", letterSpacing: "0.01em" }}>
-                Your voice, permanent and loud.
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: "#2F3A43", margin: "0 0 5px 0", letterSpacing: "0.01em" }}>
+                ✧˖°
+                <br>
+                </br>
+                <strong>Your voice, permanent and loud.</strong>
               </p>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 400, color: "white", margin: 0, lineHeight: 1.7 }}>
-                The people's record permanent, tamper-proof, forever. When officials deny, when reports disappear, when voices go unheard — Awaj writes it all to the blockchain. Permanently.
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "white", margin: 0, lineHeight: 1.7 }}>
+                The people's record permanent, tamper-proof, forever. <br></br>When officials deny, when reports disappear, when voices go unheard — Awaj writes it all to the blockchain. Permanently.
               </p>
             </div>
 
             {/* Span 2 */}
             <div style={{ flex: 1, padding: "0 20px" }}>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 600, color: "#2F3A43", margin: "0 0 10px 0", letterSpacing: "0.01em" }}>
-                Speak. Report. Be seen.
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: "#2F3A43", margin: "0 0 10px 0", letterSpacing: "0.01em" }}>
+                ✧˖°
+                <br>
+                </br>
+                <strong>Speak. Report. Be seen.</strong>
               </p>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 400, color: "white", margin: 0, lineHeight: 1.7 }}>
-                Every complaint deserves a witness. Corruption thrives in silence. Awaj makes every civic report public, verified, and impossible to erase — powered by your community and the blockchain.
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "white", margin: 0, lineHeight: 1.7 }}>
+                Every complaint deserves a witness. Corruption thrives in silence.<br></br>Awaj makes every civic report public, verified, and impossible to erase — powered by your community and the blockchain.
               </p>
             </div>
 
             {/* Span 3 */}
             <div style={{ flex: 1, padding: "0 20px" }}>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 600, color: "#2F3A43", margin: "0 0 10px 0", letterSpacing: "0.01em" }}>
-                Because someone has to listen.
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: "#2F3A43", margin: "0 0 10px 0", letterSpacing: "0.01em" }}>
+                ✧˖°
+                <br>
+                </br>
+                <strong>Because someone has to listen.</strong>
               </p>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 400, color: "white", margin: 0, lineHeight: 1.7 }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "white", margin: 0, lineHeight: 1.7 }}>
                 Built for the districts nobody listens to. From Humla to Kathmandu, every citizen deserves to be heard. Submit your report, get it confirmed by your community, and watch it live on-chain — where no one can touch it.
               </p>
             </div>
@@ -312,23 +311,23 @@ export default function HomePage({ account, onConnect, navbarRef }) {
         </div>
 
         {/* STATS BAR */}
-        <section style={{ padding: "32px 16px", background: "rgba(19,25,41,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
-          <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, textAlign: "center" }}>
+        <section style={{ padding: "32px 16px", background: "rgba(255, 255, 255, 0.13)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
+          <div style={{ maxWidth: 500, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 70, textAlign: "center" }}>
             <div>
-              <p style={{ fontSize: 30, fontWeight: 700, color: "#00c896", margin: 0 }}>
+              <p style={{ fontSize: 30, fontWeight: 700, color: "#ffffff", margin: 0 }}>
                 {totalReports === null
-                  ? <span style={{ display: "inline-block", width: 40, height: 32, background: "#374151", borderRadius: 4 }} />
+                  ? <span style={{ display: "inline-block", width: 40, height: 32, background: "#2F3A43", borderRadius: 4 }} />
                   : totalReports}
               </p>
-              <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>Total Reports</p>
+              <p style={{ fontSize: 12, color: "#ffffff", marginTop: 4 }}>Total Reports</p>
             </div>
             <div>
-              <p style={{ fontSize: 30, fontWeight: 700, color: "#00c896", margin: 0 }}>{resolvedCount}</p>
-              <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>Resolved</p>
+              <p style={{ fontSize: 30, fontWeight: 700, color: "#ffffff", margin: 0 }}>➤<br></br>{resolvedCount}</p>
+              <p style={{ fontSize: 12, color: "#ffffff", marginTop: 4 }}>Resolved</p>
             </div>
             <div>
-              <p style={{ fontSize: 30, fontWeight: 700, color: "#00c896", margin: 0 }}>5+</p>
-              <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>Active Wards</p>
+              <p style={{ fontSize: 30, fontWeight: 700, color: "#ffffff", margin: 0 , alignContent:"center"}}>⦿<br></br>5+</p>
+              <p style={{ fontSize: 12, color: "#ffffff", marginTop: 4 }}>Active Wards</p>
             </div>
           </div>
         </section>
