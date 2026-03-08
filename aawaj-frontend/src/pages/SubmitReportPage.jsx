@@ -15,6 +15,7 @@ export default function SubmitReportPage() {
   const [reportId, setReportId] = useState(null);
   const [metadataCID, setMetadataCID] = useState(null);
   const [txHash, setTxHash] = useState(null);
+  const [confirmationCode, setConfirmationCode] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [error, setError] = useState("");
@@ -53,6 +54,7 @@ export default function SubmitReportPage() {
       setReportId(result.reportId);
       setMetadataCID(result.metadataCID);
       setTxHash(result.transactionHash);
+      setConfirmationCode(result.confirmationCode);
       setStep(3);
     } catch (err) {
       setIsLoading(false);
@@ -83,6 +85,33 @@ export default function SubmitReportPage() {
           <p className="text-yellow-400 font-semibold text-sm">
             ⚠️ SAVE THIS NUMBER — you need it to track your report
           </p>
+        </div>
+
+        {/* Confirmation Code */}
+        <div className="card border-2 border-accent-blue mb-6">
+          <h4 className="text-sm font-semibold text-accent-blue mb-2">
+            🔐 Your Secret Confirmation Code
+          </h4>
+          <p
+            className="text-3xl font-mono font-bold tracking-widest mb-3"
+            style={{ color: "#00c896" }}
+          >
+            {confirmationCode}
+          </p>
+          <p className="text-xs text-muted mb-3">
+            This is your <strong className="text-white">identity proof</strong>.
+            When the government marks your issue as resolved, you’ll need this
+            code to confirm or dispute the resolution. Without it, anyone could
+            pretend to be you.
+          </p>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(confirmationCode);
+            }}
+            className="text-sm text-accent-blue hover:underline"
+          >
+            📋 Copy to clipboard
+          </button>
         </div>
 
         <div className="flex flex-col gap-3 mb-8">

@@ -6,6 +6,7 @@ import EscalationTimeline from "../components/EscalationTimeline";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { getIPFSUrl } from "../utils/pinata";
 import useIPFSImage from "../hooks/useIPFSImage";
+import { verifyConfirmationCode } from "../utils/submitReport";
 import {
   confirmResolutionViaRelayer,
   disputeResolutionViaRelayer,
@@ -72,10 +73,62 @@ function EvidenceSection({ report }) {
 
 // ── Citizen Confirm / Dispute Section ────────────────────────
 function CitizenResolutionSection({ report, onResolved }) {
-  const [action, setAction] = useState(null); // "confirm" | "dispute"
+  const [codeInput, setCodeInput] = useState("");
+  const [verified, setVerified] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+  const [confirmationHash, setConfirmationHash] = useState(null);
+  const [hashLoading, setHashLoading] = useState(true);
+
+  const [action, setAction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
   const [err, setErr] = useState("");
+
+  // Fetch the confirmationHash from IPFS metadata
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchHash() {
+      try {
+        const url = getIPFSUrl(report.ipfsHash);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Failed to fetch metadata");
+        const data = await res.json();
+        if (!cancelled) {
+          setConfirmationHash(data.confirmationHash || null);
+          setHashLoading(false);
+        }
+      } catch {
+        if (!cancelled) setHashLoading(false);
+      }
+    }
+    if (report.ipfsHash) fetchHash();
+    return () => {
+      cancelled = true;
+    };
+  }, [report.ipfsHash]);
+
+  async function handleVerifyCode(e) {
+    e.preventDefault();
+    if (!codeInput.trim()) return;
+    setVerifying(true);
+    setVerifyError("");
+
+    if (!confirmationHash) {
+      // Legacy report without a hash — allow access (backwards compat)
+      setVerified(true);
+      setVerifying(false);
+      return;
+    }
+
+    const valid = await verifyConfirmationCode(codeInput, confirmationHash);
+    if (valid) {
+      setVerified(true);
+    } else {
+      setVerifyError("Invalid code. Please check and try again.");
+    }
+    setVerifying(false);
+  }
 
   async function handleConfirm() {
     setAction("confirm");
@@ -111,6 +164,15 @@ function CitizenResolutionSection({ report, onResolved }) {
     }
   }
 
+  if (hashLoading) {
+    return (
+      <div className="card border border-yellow-700 text-center py-6">
+        <LoadingSpinner />
+        <p className="text-sm text-muted mt-2">Loading verification data…</p>
+      </div>
+    );
+  }
+
   return (
     <div className="card border border-yellow-700">
       <h3 className="font-semibold text-yellow-300 mb-2">
@@ -122,7 +184,70 @@ function CitizenResolutionSection({ report, onResolved }) {
         actually fixed. This is recorded on the blockchain and cannot be faked.
       </p>
 
-      {result ? (
+      {/* Step 1: Enter confirmation code */}
+      {!verified && !result && (
+        <div>
+          <p className="text-sm text-body mb-3">
+            🔐 Enter the{" "}
+            <strong className="text-white">secret confirmation code</strong> you
+            received when you submitted this report. This proves you are the
+            original reporter.
+          </p>
+          <form onSubmit={handleVerifyCode} className="flex gap-3">
+            <input
+              type="text"
+              value={codeInput}
+              onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+              placeholder="e.g. AAWAJ-7X9K2M3P"
+              className="flex-1 bg-surface-card border border-gray-600 text-white rounded-lg px-4 py-2 text-sm font-mono placeholder-gray-500 tracking-wider"
+            />
+            <button
+              type="submit"
+              disabled={verifying || !codeInput.trim()}
+              className="btn-primary px-5 py-2 disabled:opacity-50"
+            >
+              {verifying ? "Verifying…" : "Verify"}
+            </button>
+          </form>
+          {verifyError && (
+            <p className="text-red-400 text-sm mt-2">{verifyError}</p>
+          )}
+        </div>
+      )}
+
+      {/* Step 2: Confirm or Dispute (only after code verified) */}
+      {verified && !result && (
+        <div>
+          <div className="bg-green-900/20 border border-green-700/50 rounded-lg p-3 mb-4">
+            <p className="text-green-400 text-sm font-medium">
+              ✅ Identity verified — you are the original reporter.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={handleConfirm}
+              disabled={loading}
+              className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white py-3 rounded-lg font-semibold transition"
+            >
+              {loading && action === "confirm"
+                ? "Confirming…"
+                : "✅ Yes, it's resolved"}
+            </button>
+            <button
+              onClick={handleDispute}
+              disabled={loading}
+              className="flex-1 bg-pink-600 hover:bg-pink-700 disabled:opacity-50 text-white py-3 rounded-lg font-semibold transition"
+            >
+              {loading && action === "dispute"
+                ? "Disputing…"
+                : "❌ No, still broken"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Result */}
+      {result && (
         <div
           className={`rounded-lg p-4 text-center ${
             action === "confirm"
@@ -138,27 +263,6 @@ function CitizenResolutionSection({ report, onResolved }) {
           >
             {result}
           </p>
-        </div>
-      ) : (
-        <div className="flex gap-3">
-          <button
-            onClick={handleConfirm}
-            disabled={loading}
-            className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white py-3 rounded-lg font-semibold transition"
-          >
-            {loading && action === "confirm"
-              ? "Confirming…"
-              : "✅ Yes, it's resolved"}
-          </button>
-          <button
-            onClick={handleDispute}
-            disabled={loading}
-            className="flex-1 bg-pink-600 hover:bg-pink-700 disabled:opacity-50 text-white py-3 rounded-lg font-semibold transition"
-          >
-            {loading && action === "dispute"
-              ? "Disputing…"
-              : "❌ No, still broken"}
-          </button>
         </div>
       )}
 
