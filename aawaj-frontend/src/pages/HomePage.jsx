@@ -253,7 +253,6 @@ export default function HomePage({ account, onConnect, navbarRef }) {
       <div style={{ position: "relative", zIndex: 3, paddingTop: 530 }}>
 
         {/* GLOSSY BOX */}
-        {/* 60px from each wall, top padding 20px, title 16px */}
         <div style={{ padding: "20px 60px 40px 70px" }}>
           <div
             style={{
@@ -273,12 +272,11 @@ export default function HomePage({ account, onConnect, navbarRef }) {
             <div style={{ flex: 1, padding: "0 20px" }}>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: "#2F3A43", margin: "0 0 5px 0", letterSpacing: "0.01em" }}>
                 ✧˖°
-                <br>
-                </br>
+                <br />
                 <strong>Your voice, permanent and loud.</strong>
               </p>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "white", margin: 0, lineHeight: 1.7 }}>
-                The people's record permanent, tamper-proof, forever. <br></br>When officials deny, when reports disappear, when voices go unheard — Awaj writes it all to the blockchain. Permanently.
+                The people's record permanent, tamper-proof, forever. <br />When officials deny, when reports disappear, when voices go unheard — Awaj writes it all to the blockchain. Permanently.
               </p>
             </div>
 
@@ -286,12 +284,11 @@ export default function HomePage({ account, onConnect, navbarRef }) {
             <div style={{ flex: 1, padding: "0 20px" }}>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: "#2F3A43", margin: "0 0 10px 0", letterSpacing: "0.01em" }}>
                 ✧˖°
-                <br>
-                </br>
+                <br />
                 <strong>Speak. Report. Be seen.</strong>
               </p>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "white", margin: 0, lineHeight: 1.7 }}>
-                Every complaint deserves a witness. Corruption thrives in silence.<br></br>Awaj makes every civic report public, verified, and impossible to erase — powered by your community and the blockchain.
+                Every complaint deserves a witness. Corruption thrives in silence.<br />Awaj makes every civic report public, verified, and impossible to erase — powered by your community and the blockchain.
               </p>
             </div>
 
@@ -299,8 +296,7 @@ export default function HomePage({ account, onConnect, navbarRef }) {
             <div style={{ flex: 1, padding: "0 20px" }}>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: "#2F3A43", margin: "0 0 10px 0", letterSpacing: "0.01em" }}>
                 ✧˖°
-                <br>
-                </br>
+                <br />
                 <strong>Because someone has to listen.</strong>
               </p>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "white", margin: 0, lineHeight: 1.7 }}>
@@ -310,11 +306,24 @@ export default function HomePage({ account, onConnect, navbarRef }) {
           </div>
         </div>
 
-        {/* STATS BAR */}
-        <section style={{ padding: "32px 16px", background: "rgba(255, 255, 255, 0.13)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
-          <div style={{ maxWidth: 500, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 70, textAlign: "center" }}>
+        {/* STATS BAR — inline-block so it shrinks to content width */}
+        <div style={{ display: "flex", justifyContent: "center", padding: "24px 16px" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 190,
+            textAlign: "center",
+            background: "rgba(0, 0, 0, 0.13)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            borderWidth: 1,
+            borderStyle: "solid",
+            borderColor: "rgba(169, 169, 169, 0.18)",
+            borderRadius: 20,
+            padding: "15px 100px",
+          }}>
             <div>
-              <p style={{ fontSize: 30, fontWeight: 700, color: "#ffffff", margin: 0 }}>
+              <p style={{ fontSize: 30, fontWeight: 700, color: "#ffffff", margin: 0 }}>☑<br />
                 {totalReports === null
                   ? <span style={{ display: "inline-block", width: 40, height: 32, background: "#2F3A43", borderRadius: 4 }} />
                   : totalReports}
@@ -322,15 +331,15 @@ export default function HomePage({ account, onConnect, navbarRef }) {
               <p style={{ fontSize: 12, color: "#ffffff", marginTop: 4 }}>Total Reports</p>
             </div>
             <div>
-              <p style={{ fontSize: 30, fontWeight: 700, color: "#ffffff", margin: 0 }}>➤<br></br>{resolvedCount}</p>
+              <p style={{ fontSize: 30, fontWeight: 700, color: "#ffffff", margin: 0 }}>➤<br />{resolvedCount}</p>
               <p style={{ fontSize: 12, color: "#ffffff", marginTop: 4 }}>Resolved</p>
             </div>
             <div>
-              <p style={{ fontSize: 30, fontWeight: 700, color: "#ffffff", margin: 0 , alignContent:"center"}}>⦿<br></br>5+</p>
+              <p style={{ fontSize: 30, fontWeight: 700, color: "#ffffff", margin: 0 }}>⦿<br />5+</p>
               <p style={{ fontSize: 12, color: "#ffffff", marginTop: 4 }}>Active Wards</p>
             </div>
           </div>
-        </section>
+        </div>
 
       </div>
 
