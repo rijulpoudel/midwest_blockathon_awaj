@@ -4,8 +4,7 @@
 
 Echo is a citizen evidence reporting dApp built on the **Polygon Amoy** blockchain for Nepal. Citizens photograph and report civic problems (broken roads, waste, street lighting, drainage, etc.). Every report is stored immutably on-chain — no government body can delete it or fake a resolution.
 
-**Live Demo:** _[Add your Vercel URL here]_  
-**Contract on Polygonscan:** `https://amoy.polygonscan.com/address/<VITE_CONTRACT_ADDRESS>`
+**Live Demo:** midwest-blockathon-awaj.vercel.app 
 
 ---
 
